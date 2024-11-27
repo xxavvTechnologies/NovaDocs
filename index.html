@@ -5,25 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Document Editor</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <header>
         <h1>Document Editor</h1>
         <div>
-            <button id="save-btn">Save</button>
-            <button id="load-btn">Load</button>
+            <button id="new-btn"><i class="fas fa-file"></i> New</button>
+            <button id="save-btn"><i class="fas fa-save"></i> Save</button>
+            <button id="load-btn"><i class="fas fa-folder-open"></i> Load</button>
+            <button id="print-btn"><i class="fas fa-print"></i> Print</button>
         </div>
     </header>
     <div id="toolbar">
-        <button onclick="format('bold')">Bold</button>
-        <button onclick="format('italic')">Italic</button>
-        <button onclick="format('underline')">Underline</button>
-        <button onclick="format('justifyLeft')">Align Left</button>
-        <button onclick="format('justifyCenter')">Center</button>
-        <button onclick="format('justifyRight')">Align Right</button>
+        <select id="font-select">
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Georgia">Georgia</option>
+        </select>
+        <select id="font-size-select">
+            <option value="12">12</option>
+            <option value="14">14</option>
+            <option value="16" selected>16</option>
+            <option value="18">18</option>
+            <option value="24">24</option>
+        </select>
+        <button onclick="format('bold')"><i class="fas fa-bold"></i></button>
+        <button onclick="format('italic')"><i class="fas fa-italic"></i></button>
+        <button onclick="format('underline')"><i class="fas fa-underline"></i></button>
+        <button onclick="format('justifyLeft')"><i class="fas fa-align-left"></i></button>
+        <button onclick="format('justifyCenter')"><i class="fas fa-align-center"></i></button>
+        <button onclick="format('justifyRight')"><i class="fas fa-align-right"></i></button>
+        <input type="color" id="text-color" title="Text Color">
+        <input type="color" id="highlight-color" title="Highlight Color">
     </div>
     <div id="editor-container">
-        <div id="editor" contenteditable="true"></div>
+        <div id="editor" contenteditable="true" spellcheck="true"></div>
+    </div>
+    <div id="saved-documents-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Saved Documents</h2>
+            <ul id="saved-documents-list"></ul>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
