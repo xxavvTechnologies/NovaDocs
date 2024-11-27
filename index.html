@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web-Based Document Editor</title>
+    <title>Modern Document Editor</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
         <h1>Document Editor</h1>
-        <button id="save-btn">Save</button>
-        <button id="load-btn">Load</button>
+        <div>
+            <button id="save-btn">Save</button>
+            <button id="load-btn">Load</button>
+        </div>
     </header>
     <div id="toolbar">
         <button onclick="format('bold')">Bold</button>
@@ -20,8 +22,9 @@
         <button onclick="format('justifyCenter')">Center</button>
         <button onclick="format('justifyRight')">Align Right</button>
     </div>
-    <div id="editor" contenteditable="true"></div>
-
+    <div id="editor-container">
+        <div id="editor" contenteditable="true"></div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

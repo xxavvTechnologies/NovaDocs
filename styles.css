@@ -1,47 +1,100 @@
+/* General Body Styling */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3));
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
 }
 
+/* Header Styling */
 header {
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #bb9f81;
-    color: white;
-    padding: 10px 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+header h1 {
+    color: #3b3a3a;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+header button {
+    margin-left: 10px;
+    padding: 8px 15px;
+    background-color: #bb9f81;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+header button:hover {
+    background-color: #d8b87c;
+}
+
+/* Toolbar Styling */
 #toolbar {
-    padding: 10px;
-    background-color: #d8d2c6;
-    border-bottom: 1px solid #ccc;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;
 }
 
 #toolbar button {
-    margin-right: 5px;
-    padding: 5px 10px;
-    border: none;
-    background-color: #3b3a3a;
-    color: white;
+    padding: 10px 15px;
+    font-size: 1rem;
+    color: #3b3a3a;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     cursor: pointer;
-    border-radius: 3px;
+    transition: background 0.3s, color 0.3s;
 }
 
 #toolbar button:hover {
-    background-color: #606060;
+    background: rgba(255, 215, 0, 0.4);
+    color: white;
 }
 
+/* Editor Container Styling */
+#editor-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 140px);
+    width: 100%;
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+}
+
+/* Editor Area Styling */
 #editor {
-    height: 80vh;
-    padding: 10px;
-    margin: 10px;
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 8.5in;
+    height: 11in;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     overflow-y: auto;
+    border-radius: 0;
+    font-size: 16px;
+    color: #3b3a3a;
+    line-height: 1.5;
 }
