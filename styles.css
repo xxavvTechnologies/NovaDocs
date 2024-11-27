@@ -6,6 +6,9 @@ body {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3));
     backdrop-filter: blur(10px);
     color: #3b3a3a;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 /* Header Styling */
@@ -25,9 +28,9 @@ header {
 }
 
 header h1 {
-    color: #3b3a3a;
     margin: 0;
     font-size: 1.5rem;
+    color: #3b3a3a;
 }
 
 header button {
@@ -47,7 +50,7 @@ header button:hover {
 /* Toolbar Styling */
 #toolbar {
     position: fixed;
-    top: 70px;
+    top: 60px;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -58,7 +61,7 @@ header button:hover {
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+    z-index: 99;
 }
 
 #toolbar button, #toolbar select, #toolbar input[type="color"] {
@@ -79,15 +82,10 @@ header button:hover {
 
 #toolbar select {
     appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
     background-repeat: no-repeat;
     background-position-x: 100%;
     background-position-y: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0;
-    margin-right: 2px;
     padding-right: 2rem;
 }
 
@@ -98,14 +96,13 @@ header button:hover {
 }
 
 /* Editor Container Styling */
-/* Editor Container Styling */
 #editor-container {
-    margin-top: 140px; /* Accounts for header and toolbar */
+    margin-top: 130px; /* Accounts for header and toolbar */
     display: flex;
     justify-content: center;
     align-items: flex-start;
     width: 100%;
-    height: calc(100vh - 140px);
+    flex-grow: 1;
     overflow: auto;
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
@@ -134,38 +131,6 @@ header button:hover {
     margin-top: 0;
 }
 
-/* Adds a minimum height to ensure typing area is visible */
-#editor::before {
-    content: '';
-    display: block;
-    height: 1px;
-    margin-bottom: -1px;
-}
-
-/* Editor Area Styling */
-#editor {
-    width: 8.5in;
-    height: 11in;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 40px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    overflow-y: auto;
-    font-size: 16px;
-    line-height: 1.6;
-    outline: none;
-}
-
-#editor p {
-    margin: 0;
-    padding: 0;
-}
-
-#editor p:first-child {
-    margin-top: 0;
-}
-
-/* Adds a minimum height to ensure typing area is visible */
 #editor::before {
     content: '';
     display: block;
@@ -177,7 +142,7 @@ header button:hover {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
