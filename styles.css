@@ -96,15 +96,48 @@ header button:hover {
 }
 
 /* Editor Container Styling */
+/* Editor Container Styling */
 #editor-container {
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: calc(100vh - 140px);
+    align-items: flex-start; /* Changed from center to flex-start */
     width: 100%;
+    height: calc(100vh - 140px);
     overflow: auto;
     background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
+    padding: 20px 20px 0; /* Reduced bottom padding */
+    margin-top: 0; /* Ensure no extra top margin */
+}
+
+/* Editor Area Styling */
+#editor {
+    width: 8.5in;
+    height: 11in;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    font-size: 16px;
+    line-height: 1.6;
+    outline: none;
+}
+
+#editor p {
+    margin: 0;
+    padding: 0;
+}
+
+#editor p:first-child {
+    margin-top: 0;
+}
+
+/* Adds a minimum height to ensure typing area is visible */
+#editor::before {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-bottom: -1px;
 }
 
 /* Editor Area Styling */
