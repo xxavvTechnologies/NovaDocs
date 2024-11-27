@@ -113,12 +113,29 @@ header button:hover {
     height: 11in;
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 20px;
+    padding: 40px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     overflow-y: auto;
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.6;
     outline: none;
+}
+
+#editor p {
+    margin: 0;
+    padding: 0;
+}
+
+#editor p:first-child {
+    margin-top: 0;
+}
+
+/* Adds a minimum height to ensure typing area is visible */
+#editor::before {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-bottom: -1px;
 }
 
 /* Modal Styling */
