@@ -1,14 +1,51 @@
-/* General Body Styling */
-body {
-    font-family: 'Wix Madefor Display', Arial, sans-serif;
+:root {
+    /* Light Mode Colors */
+    --bg-primary: #f0f2f5;
+    --bg-secondary: rgba(255, 255, 255, 0.9);
+    --text-primary: #3b3a3a;
+    --text-secondary: #4a4a4a;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --toolbar-bg: rgba(255, 255, 255, 0.3);
+    --accent-color: rgba(255, 215, 0, 0.3);
+    --accent-hover: rgba(255, 215, 0, 0.5);
+}
+
+/* Dark Mode Colors */
+.dark-mode {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: rgba(30, 30, 30, 0.9);
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow-color: rgba(255, 255, 255, 0.05);
+    --toolbar-bg: rgba(40, 40, 40, 0.5);
+    --accent-color: rgba(255, 215, 0, 0.2);
+    --accent-hover: rgba(255, 215, 0, 0.4);
+}
+
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3));
-    backdrop-filter: blur(10px);
-    color: #3b3a3a;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-x: hidden;
+}
+
+#app-container {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 /* Header Styling */
@@ -21,31 +58,112 @@ header {
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
-    background: rgba(255, 255, 255, 0.3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--toolbar-bg);
+    border-bottom: 1px solid var(--border-color);
     backdrop-filter: blur(10px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px var(--shadow-color);
     z-index: 100;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
 header h1 {
     margin: 0;
     font-size: 1.5rem;
-    color: #3b3a3a;
+    color: var(--text-primary);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 header button {
-    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 8px 15px;
-    background-color: rgba(255, 215, 0, 0.3);
-    color: #3b3a3a;
-    border: 1px solid rgba(255, 215, 0, 0.2);
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background 0.3s, transform 0.1s;
 }
 
 header button:hover {
-    background-color: rgba(255, 215, 0, 0.5);
+    background-color: var(--accent-hover);
+    transform: scale(1.05);
+}
+
+header button i {
+    margin-right: 5px;
+}
+
+.btn-text {
+    display: none;
+}
+
+/* Theme Toggle Switch */
+.theme-toggle {
+    position: relative;
+}
+
+.theme-switch-input {
+    display: none;
+}
+
+.theme-switch-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    width: 60px;
+    height: 30px;
+    background: var(--toolbar-bg);
+    border-radius: 15px;
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.theme-switch-label i {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.theme-switch-label .fa-sun {
+    left: 0;
+    color: orange;
+}
+
+.theme-switch-label .fa-moon {
+    right: 0;
+    color: #6e6e6e;
+}
+
+.theme-switch-slider {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    background: white;
+    border-radius: 50%;
+    left: 2px;
+    transition: 0.4s;
+    z-index: 3;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.theme-switch-input:checked + .theme-switch-label .theme-switch-slider {
+    transform: translateX(30px);
+    background: #4a4a4a;
 }
 
 /* Toolbar Styling */
@@ -57,89 +175,82 @@ header button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 20px;
     padding: 15px 20px;
-    background: rgba(255, 255, 255, 0.3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--toolbar-bg);
+    border-bottom: 1px solid var(--border-color);
     backdrop-filter: blur(10px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px var(--shadow-color);
     z-index: 99;
+}
+
+.toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 #toolbar button,
 #toolbar select,
 #toolbar input[type="color"] {
-    padding: 10px 15px;
-    font-size: 1rem;
-    color: #3b3a3a;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background 0.3s, color 0.3s;
-    margin: 0 2px;
+    transition: background 0.3s, transform 0.1s;
 }
 
 #toolbar button:hover {
-    background: rgba(255, 215, 0, 0.4);
-    color: white;
+    background: var(--accent-color);
+    transform: scale(1.1);
 }
 
 #toolbar select {
     appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+    padding: 8px 15px;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='currentColor' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
     background-repeat: no-repeat;
-    background-position-x: 100%;
+    background-position-x: 95%;
     background-position-y: 50%;
     padding-right: 2rem;
 }
 
 #toolbar input[type="color"] {
-    padding: 5px;
     width: 40px;
     height: 40px;
+    padding: 2px;
 }
 
 /* Editor Container Styling */
 #editor-container {
-    margin-top: 130px; /* Accounts for header and toolbar */
+    margin-top: 130px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     width: 100%;
     flex-grow: 1;
     overflow: auto;
-    background: rgba(255, 255, 255, 0.1);
     padding: 20px;
 }
 
-/* Editor Area Styling */
 #editor {
     width: 8.5in;
-    height: 11in;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    min-height: 11in;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     padding: 40px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 15px var(--shadow-color);
     overflow-y: auto;
     font-size: 16px;
     line-height: 1.6;
     outline: none;
+    color: var(--text-primary);
 }
 
-#editor p {
-    margin: 0;
-    padding: 0;
-}
-
-#editor p:first-child {
-    margin-top: 0;
-}
-
-#editor::before {
-    content: '';
-    display: block;
-    height: 1px;
-    margin-bottom: -1px;
+#editor:empty:before {
+    content: attr(placeholder);
+    color: var(--text-secondary);
+    pointer-events: none;
 }
 
 /* Modal Styling */
@@ -156,17 +267,18 @@ header button:hover {
 }
 
 .modal-content {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: var(--bg-secondary);
     margin: 15% auto;
     padding: 20px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
     width: 80%;
     max-width: 500px;
     backdrop-filter: blur(10px);
+    color: var(--text-primary);
 }
 
 .close-btn {
-    color: #aaa;
+    color: var(--text-secondary);
     float: right;
     font-size: 28px;
     font-weight: bold;
@@ -174,5 +286,78 @@ header button:hover {
 }
 
 .close-btn:hover {
-    color: black;
+    color: var(--text-primary);
+}
+
+/* Saved Documents List Styling */
+#saved-documents-list {
+    list-style-type: none;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#saved-documents-list li {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#saved-documents-list li:hover {
+    background-color: var(--accent-color);
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-text {
+        display: inline;
+    }
+
+    #toolbar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .toolbar-section {
+        margin: 5px;
+    }
+
+    #editor {
+        width: 100%;
+        padding: 20px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #editor, #editor * {
+        visibility: visible;
+    }
+
+    #editor {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 20px;
+        border: none;
+        box-shadow: none;
+    }
 }

@@ -3,54 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Document Editor</title>
+    <title>Nova Docs</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
-<body>
-    <header>
-        <h1>Document Editor</h1>
-        <div>
-            <button id="new-btn"><i class="fas fa-file"></i> New</button>
-            <button id="save-btn"><i class="fas fa-save"></i> Save</button>
-            <button id="load-btn"><i class="fas fa-folder-open"></i> Load</button>
-            <button id="print-btn"><i class="fas fa-print"></i> Print</button>
+<body class="light-mode">
+    <div id="app-container">
+        <header>
+            <div class="logo-section">
+                <h1>Nova Docs</h1>
+                <div class="theme-toggle">
+                    <input type="checkbox" id="theme-switch" class="theme-switch-input">
+                    <label for="theme-switch" class="theme-switch-label">
+                        <i class="fas fa-sun"></i>
+                        <i class="fas fa-moon"></i>
+                        <span class="theme-switch-slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="new-btn" title="New Document">
+                    <i class="fas fa-file"></i>
+                    <span class="btn-text">New</span>
+                </button>
+                <button id="save-btn" title="Save Document">
+                    <i class="fas fa-save"></i>
+                    <span class="btn-text">Save</span>
+                </button>
+                <button id="load-btn" title="Load Document">
+                    <i class="fas fa-folder-open"></i>
+                    <span class="btn-text">Load</span>
+                </button>
+                <button id="print-btn" title="Print Document">
+                    <i class="fas fa-print"></i>
+                    <span class="btn-text">Print</span>
+                </button>
+                <button id="drive-sync-btn" title="Sync with Google Drive">
+                    <i class="fab fa-google-drive"></i>
+                    <span class="btn-text">Drive Sync</span>
+                </button>
+            </div>
+        </header>
+
+        <div id="toolbar">
+            <div class="toolbar-section">
+                <select id="font-select">
+                    <option value="Inter">Inter</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                </select>
+                <select id="font-size-select">
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                    <option value="16" selected>16</option>
+                    <option value="18">18</option>
+                    <option value="24">24</option>
+                </select>
+            </div>
+            <div class="toolbar-section">
+                <button onclick="format('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                <button onclick="format('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                <button onclick="format('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+            </div>
+            <div class="toolbar-section">
+                <button onclick="format('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                <button onclick="format('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+                <button onclick="format('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+            </div>
+            <div class="toolbar-section">
+                <input type="color" id="text-color" title="Text Color">
+                <input type="color" id="highlight-color" title="Highlight Color">
+            </div>
         </div>
-    </header>
-    <div id="toolbar">
-        <select id="font-select">
-            <option value="Arial">Arial</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Courier New">Courier New</option>
-            <option value="Georgia">Georgia</option>
-        </select>
-        <select id="font-size-select">
-            <option value="12">12</option>
-            <option value="14">14</option>
-            <option value="16" selected>16</option>
-            <option value="18">18</option>
-            <option value="24">24</option>
-        </select>
-        <button onclick="format('bold')"><i class="fas fa-bold"></i></button>
-        <button onclick="format('italic')"><i class="fas fa-italic"></i></button>
-        <button onclick="format('underline')"><i class="fas fa-underline"></i></button>
-        <button onclick="format('justifyLeft')"><i class="fas fa-align-left"></i></button>
-        <button onclick="format('justifyCenter')"><i class="fas fa-align-center"></i></button>
-        <button onclick="format('justifyRight')"><i class="fas fa-align-right"></i></button>
-        <input type="color" id="text-color" title="Text Color">
-        <input type="color" id="highlight-color" title="Highlight Color">
-    </div>
-    <div id="editor-container">
-        <div id="editor" contenteditable="true" spellcheck="true"></div>
-    </div>
-    <div id="saved-documents-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2>Saved Documents</h2>
-            <ul id="saved-documents-list"></ul>
+
+        <div id="editor-container">
+            <div id="editor" contenteditable="true" spellcheck="true" placeholder="Start typing your document..."></div>
+        </div>
+
+        <div id="saved-documents-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2>Saved Documents</h2>
+                <ul id="saved-documents-list"></ul>
+            </div>
+        </div>
+
+        <div id="drive-sync-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2>Google Drive Sync</h2>
+                <div id="drive-sync-content">
+                    <button id="google-login-btn">
+                        <i class="fab fa-google"></i> Login with Google
+                    </button>
+                    <div id="drive-file-list"></div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script src="https://apis.google.com/js/api.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

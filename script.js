@@ -1,6 +1,31 @@
+// Google Drive Sync Setup (Placeholder)
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_API_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
 // Format selected text
 function format(command, value = null) {
     document.execCommand(command, false, value);
+}
+
+// Theme Toggle Functionality
+function initThemeToggle() {
+    const themeSwitch = document.getElementById('theme-switch');
+    const body = document.body;
+
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        body.classList.toggle('dark-mode', savedTheme === 'dark');
+        themeSwitch.checked = savedTheme === 'dark';
+    }
+
+    themeSwitch.addEventListener('change', () => {
+        body.classList.toggle('dark-mode');
+        
+        // Save theme preference
+        const theme = body.classList.contains('dark-mode') ? 'dark' : 'light';
+        localStorage.setItem('theme', theme);
+    });
 }
 
 // DOM Elements
@@ -15,7 +40,10 @@ const textColorInput = document.getElementById('text-color');
 const highlightColorInput = document.getElementById('highlight-color');
 const savedDocumentsModal = document.getElementById('saved-documents-modal');
 const savedDocumentsList = document.getElementById('saved-documents-list');
-const closeModalBtn = document.querySelector('.close-btn');
+const closeModalBtns = document.querySelectorAll('.close-btn');
+const googleLoginBtn = document.getElementById('google-login-btn');
+const driveSyncModal = document.getElementById('drive-sync-modal');
+const driveSyncContent = document.getElementById('drive-sync-content');
 
 // Save document to localStorage
 function saveDocument() {
@@ -72,53 +100,51 @@ function printDocument() {
 }
 
 // Apply font
-fontSelect.addEventListener('change', (e) => {
-    format('fontName', e.target.value);
+fontSelect.addEventListener('change', () => {
+    const selectedFont = fontSelect.value;
+    document.execCommand('fontName', false, selectedFont);
 });
 
 // Apply font size
-fontSizeSelect.addEventListener('change', (e) => {
-    format('fontSize', e.target.value);
+fontSizeSelect.addEventListener('change', () => {
+    const selectedFontSize = fontSizeSelect.value;
+    document.execCommand('fontSize', false, selectedFontSize);
 });
 
 // Apply text color
-textColorInput.addEventListener('change', (e) => {
-    format('foreColor', e.target.value);
+textColorInput.addEventListener('change', () => {
+    const selectedTextColor = textColorInput.value;
+    document.execCommand('foreColor', false, selectedTextColor);
 });
 
 // Apply highlight color
-highlightColorInput.addEventListener('change', (e) => {
-    format('hiliteColor', e.target.value);
+highlightColorInput.addEventListener('change', () => {
+    const selectedHighlightColor = highlightColorInput.value;
+    document.execCommand('hiliteColor', false, selectedHighlightColor);
 });
 
-// Event Listeners
+// Event listeners for buttons
 saveBtn.addEventListener('click', saveDocument);
 loadBtn.addEventListener('click', loadDocuments);
 newBtn.addEventListener('click', newDocument);
 printBtn.addEventListener('click', printDocument);
 
-// Close modal when clicking on close button
-closeModalBtn.addEventListener('click', () => {
-    savedDocumentsModal.style.display = 'none';
+// Close modals
+closeModalBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const modal = btn.closest('.modal');
+        modal.style.display = 'none';
+    });
 });
 
-// Close modal when clicking outside of it
-window.addEventListener('click', (e) => {
-    if (e.target === savedDocumentsModal) {
-        savedDocumentsModal.style.display = 'none';
-    }
+// Initialize theme toggle
+initThemeToggle();
+
+// Google Drive login (requires further implementation)
+googleLoginBtn.addEventListener('click', () => {
+    alert('Google Drive sync functionality is not implemented yet.');
 });
 
-// Auto-save feature (every 2 minutes)
-setInterval(() => {
-    const autoSaveContent = editor.innerHTML;
-    localStorage.setItem('autoSaveContent', autoSaveContent);
-}, 120000);
-
-// Restore auto-save on page load
-window.addEventListener('load', () => {
-    const autoSaveContent = localStorage.getItem('autoSaveContent');
-    if (autoSaveContent) {
-        editor.innerHTML = autoSaveContent;
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    // Placeholder for future Google Drive functionality
 });
