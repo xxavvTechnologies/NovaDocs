@@ -3,7 +3,7 @@ let auth0 = null;
 window.onload = async () => {
     await configureAuth0();
 
-    // Handle redirect callback
+    // Handle redirect if returning from login
     if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
         try {
             await auth0.handleRedirectCallback();
@@ -13,10 +13,12 @@ window.onload = async () => {
         }
     }
 
-    // Attach global event listener for clicks
-    document.body.addEventListener("click", handleBodyClick);
-
+    // Initialize UI
     await updateUI();
+
+    // Attach event listener to dropdown button
+    const profileButton = document.getElementById("profile-button");
+    profileButton.addEventListener("click", toggleDropdown);
 };
 
 const configureAuth0 = async () => {
@@ -31,36 +33,41 @@ const configureAuth0 = async () => {
 
 const updateUI = async () => {
     const isAuthenticated = await auth0.isAuthenticated();
-    document.getElementById("login").style.display = isAuthenticated ? "none" : "block";
-    document.getElementById("user-dropdown").style.display = isAuthenticated ? "block" : "none";
+    const dropdownMenu = document.getElementById("dropdown-menu");
+
+    dropdownMenu.innerHTML = ""; // Clear menu before adding new items
 
     if (isAuthenticated) {
         const user = await auth0.getUser();
-        const profileButton = document.getElementById("profile-button");
 
-        if (user.picture) {
-            profileButton.innerHTML = `<img src="${user.picture}" alt="Profile Picture" style="width: 40px; height: 40px; border-radius: 50%;">`;
-        }
+        // Add user-specific menu options
+        dropdownMenu.innerHTML += `<a href="#">Welcome, ${user.name || "User"}</a>`;
+        dropdownMenu.innerHTML += `<a href="#">Nova App 1</a>`;
+        dropdownMenu.innerHTML += `<a href="#">Nova App 2</a>`;
+        dropdownMenu.innerHTML += `<a href="#" id="logout">Logout</a>`;
+
+        document.getElementById("logout").addEventListener("click", () => {
+            auth0.logout({ returnTo: window.location.origin });
+        });
+    } else {
+        // Show Login option if not authenticated
+        dropdownMenu.innerHTML += `<a href="#" id="login">Login</a>`;
+
+        document.getElementById("login").addEventListener("click", async () => {
+            await auth0.loginWithRedirect();
+        });
     }
 };
 
-document.getElementById("login").addEventListener("click", async () => {
-    await auth0.loginWithRedirect();
-});
-
-document.getElementById("logout").addEventListener("click", () => {
-    auth0.logout({ returnTo: "https://docs.nova.xxavvgroup.com" });
-});
-
-const handleBodyClick = (event) => {
+const toggleDropdown = () => {
     const dropdownMenu = document.getElementById("dropdown-menu");
-    const profileButton = document.getElementById("profile-button");
+    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+};
 
-    // If clicking on the profile button, toggle the dropdown
-    if (profileButton.contains(event.target)) {
-        dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
-    } else {
-        // Hide dropdown if clicking anywhere else
+// Close dropdown when clicking outside
+window.addEventListener("click", (event) => {
+    if (!event.target.closest(".user-dropdown")) {
+        const dropdownMenu = document.getElementById("dropdown-menu");
         dropdownMenu.style.display = "none";
     }
-};
+});

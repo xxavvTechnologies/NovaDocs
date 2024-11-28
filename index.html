@@ -11,24 +11,20 @@
 </head>
 <body>
     <header>
-        <h1>Document Editor</h1>
-        <div class="user-info">
-            <button id="login">Login</button>
-            <div id="user-dropdown" class="dropdown" style="display: none;">
-                <button class="dropbtn" id="profile-button">
-                    <i class="fas fa-user-circle fa-2x"></i>
-                </button>
-                <div class="dropdown-content" id="dropdown-menu" style="display: none;">
-                    <a href="#">Nova App 1</a>
-                    <a href="#">Nova App 2</a>
-                    <a href="#">Nova App 3</a>
-                    <a href="#" id="logout">Logout</a>
-                </div>
+        <h1>Nova Docs</h1>
+        <div class="user-dropdown">
+            <button class="dropbtn" id="profile-button">
+                <i class="fas fa-user-circle"></i>
+            </button>
+            <div class="dropdown-content" id="dropdown-menu">
+                <!-- Options dynamically loaded based on authentication status -->
             </div>
         </div>
-    </header>    
+    </header>
     <main>
-        <div id="editor" contenteditable="true"></div>
+        <div id="editor" contenteditable="true" class="editor">
+            Start editing your document here...
+        </div>
     </main>
     <script src="script.js"></script>
 </body>
