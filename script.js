@@ -125,12 +125,17 @@ function newDocument() {
 function printDocument() {
     const printContents = editor.innerHTML;
     const originalContents = document.body.innerHTML;
-    
+
+    // Temporarily replace the body content with the editor's content
     document.body.innerHTML = printContents;
+
+    // Trigger the print dialog
     window.print();
-    
+
+    // Restore the original content immediately after printing
     document.body.innerHTML = originalContents;
-    location.reload(); // Reload to restore functionality
+
+    // Optional: Reattach any event listeners or scripts if necessary
 }
 
 // Google Drive Sync Functionality
