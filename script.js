@@ -32,9 +32,15 @@ const updateUI = async () => {
     
     if (isAuthenticated) {
         document.getElementById('editor').contentEditable = true;
-        await getUserProfile();
+        const user = await auth0.getUser();
+        if (user.picture) {
+            const profilePicture = document.getElementById('profile-picture');
+            profilePicture.style.backgroundImage = `url(${user.picture})`;
+            profilePicture.style.display = 'block';
+        }
     } else {
         document.getElementById('editor').contentEditable = false;
+        document.getElementById('profile-picture').style.display = 'none';
     }
 };
 

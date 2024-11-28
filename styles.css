@@ -12,6 +12,20 @@ header {
     align-items: center;
 }
 
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+#profile-picture {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin-left: 10px;
+}
+
 #editor {
     width: 80%;
     height: 500px;
