@@ -282,7 +282,35 @@ function initEventListeners() {
         format('hiliteColor', e.target.value);
     });
 
-    function initFontSizeSelector() {
+    // Theme toggle
+    themeSwitch.addEventListener('change', toggleTheme);
+
+    // Close modal buttons
+    closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('.modal').style.display = 'none';
+        });
+    });
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+            e.target.style.display = 'none';
+        }
+    });
+
+    // Google Drive sync listeners
+    driveLoginBtn.addEventListener('click', () => GoogleDriveSync.handleAuthClick());
+    driveSyncBtn.addEventListener('click', () => {
+        if (GoogleDriveSync.isSignedIn) {
+            GoogleDriveSync.saveFile();
+        } else {
+            driveSyncModal.style.display = 'block';
+        }
+    });
+}
+
+function initFontSizeSelector() {
     const fontSizeSelect = document.getElementById('font-size-select');
 
     // Populate font size dropdown with default sizes
@@ -328,34 +356,6 @@ function initEventListeners() {
         });
         fontSizeSelect.parentNode.appendChild(customInput);
         customInput.focus();
-    });
-}
-
-    // Theme toggle
-    themeSwitch.addEventListener('change', toggleTheme);
-
-    // Close modal buttons
-    closeModalBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.closest('.modal').style.display = 'none';
-        });
-    });
-
-    // Close modal when clicking outside of it
-    window.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
-            e.target.style.display = 'none';
-        }
-    });
-
-    // Google Drive sync listeners
-    driveLoginBtn.addEventListener('click', () => GoogleDriveSync.handleAuthClick());
-    driveSyncBtn.addEventListener('click', () => {
-        if (GoogleDriveSync.isSignedIn) {
-            GoogleDriveSync.saveFile();
-        } else {
-            driveSyncModal.style.display = 'block';
-        }
     });
 }
 
