@@ -361,3 +361,10 @@ header button i {
         box-shadow: none;
     }
 }
+
+.custom-font-size-input {
+    width: 50px;
+    margin-left: 5px;
+    padding: 3px;
+    font-size: 14px;
+}

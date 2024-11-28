@@ -252,6 +252,55 @@ const GoogleDriveSync = {
     }
 };
 
+function initFontSizeSelector() {
+    const fontSizeSelect = document.getElementById('font-size-select');
+
+    // Populate font size dropdown with default sizes
+    for (let size = 9; size <= 60; size++) {
+        const option = document.createElement('option');
+        option.value = size;
+        option.textContent = size;
+        fontSizeSelect.appendChild(option);
+    }
+
+    // Add an event listener to handle changes
+    fontSizeSelect.addEventListener('change', (e) => {
+        const selectedSize = parseInt(e.target.value, 10);
+        if (selectedSize >= 9 && selectedSize <= 96) {
+            format('fontSize', selectedSize);
+        } else {
+            alert('Please select a font size between 9 and 96.');
+        }
+    });
+
+    // Allow custom font size input
+    fontSizeSelect.addEventListener('click', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+
+        // Add input field for custom size
+        const customInput = document.createElement('input');
+        customInput.type = 'number';
+        customInput.min = '9';
+        customInput.max = '96';
+        customInput.placeholder = 'Custom';
+        customInput.className = 'custom-font-size-input';
+        customInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                const value = parseInt(customInput.value, 10);
+                if (value >= 9 && value <= 96) {
+                    format('fontSize', value);
+                    fontSizeSelect.value = value; // Update dropdown to reflect custom size
+                } else {
+                    alert('Font size must be between 9 and 96.');
+                }
+                customInput.remove(); // Remove input field
+            }
+        });
+        fontSizeSelect.parentNode.appendChild(customInput);
+        customInput.focus();
+    });
+}
+
 // Event Listeners
 function initEventListeners() {
     // Existing listeners
