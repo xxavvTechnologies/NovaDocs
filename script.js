@@ -3,10 +3,16 @@ let auth0 = null;
 window.onload = async () => {
     await configureAuth0();
     
+    // Clear any existing authentication state
+    await auth0.logout({
+        localOnly: true
+    });
+    
     if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
         try {
             await auth0.handleRedirectCallback();
             window.history.replaceState({}, document.title, window.location.pathname);
+            await updateUI(); // Add this line
         } catch (error) {
             console.error("Error handling redirect:", error);
         }
@@ -33,7 +39,9 @@ const updateUI = async () => {
     if (isAuthenticated) {
         document.getElementById('editor').contentEditable = true;
         const user = await auth0.getUser();
-        const profileButton = document.getElementById('profile-button');
+        document.getElementById('profile-button').addEventListener('click', () => {
+            document.querySelector('.dropdown-content').style.display = 'block';
+        });
         
         if (user.picture) {
             profileButton.innerHTML = `<img src="${user.picture}" alt="Profile Picture">`;
@@ -45,7 +53,12 @@ const updateUI = async () => {
     }
 };
 
+document.getElementById('login').addEventListener('click', async () => {
+    await auth0.loginWithRedirect();
+});
+
 document.getElementById('logout').addEventListener('click', () => {
+    console.log('Logout clicked');
     auth0.logout({
         returnTo: 'https://docs.nova.xxavvgroup.com'
     });
@@ -55,18 +68,5 @@ const getUserProfile = async () => {
     if (await auth0.isAuthenticated()) {
         const user = await auth0.getUser();
         console.log(user);
-        // You can use the user object to display user information
     }
 };
-
-document.getElementById('login').addEventListener('click', async () => {
-    await auth0.loginWithRedirect();
-});
-
-document.getElementById('logout').addEventListener('click', () => {
-    auth0.logout({
-        returnTo: 'https://docs.nova.xxavvgroup.com'
-    });
-});
-
-// Add more functionality for saving and loading documents here
