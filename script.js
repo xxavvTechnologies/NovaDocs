@@ -48,24 +48,38 @@ const updateUI = async () => {
         const user = await auth0.getUser();
 
         // Add user-specific options
-        dropdownMenu.innerHTML += `<a href="#">Welcome, ${user.name || "User"}</a>`;
-        dropdownMenu.innerHTML += `<a href="#">Nova App 1</a>`;
-        dropdownMenu.innerHTML += `<a href="#">Nova App 2</a>`;
-        dropdownMenu.innerHTML += `<a href="#" id="logout">Logout</a>`;
+        dropdownMenu.innerHTML += `
+            <a href="#" class="user-welcome">
+                <img src="${user.picture || 'https://upload.wikimedia.org/wikipedia/commons/4/41/Default-avatar%E5%BE%97%E5%BE%97.png?20240324104624'}" alt="User Avatar" class="user-avatar">
+                Welcome, ${user.name || "User"}
+            </a>`;
+        
+        // Add Nova App links with Font Awesome icons
+        dropdownMenu.innerHTML += `
+            <a href="https://account.nova.xxavvgroup.com" class="nova-app-link">Your Account</a>
+            <a href="https://search.nova.xxavvgroup.com" class="nova-app-link">Nova Search</a>
+            <a href="https://app2.nova.xxavvgroup.com" class="nova-app-link">Nova App</a>`;
+
+        dropdownMenu.innerHTML += `
+            <a href="#" id="logout" class="logout-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>`;
 
         document.getElementById("logout").addEventListener("click", () => {
             auth0.logout({ returnTo: window.location.origin });
         });
     } else {
         // Add login option if not authenticated
-        dropdownMenu.innerHTML += `<a href="#" id="login">Login</a>`;
+        dropdownMenu.innerHTML += `
+            <a href="#" id="login" class="login-link">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>`;
 
         document.getElementById("login").addEventListener("click", async () => {
             await auth0.loginWithRedirect();
         });
     }
 };
-
 const toggleDropdown = () => {
     const dropdownMenu = document.getElementById("dropdown-menu");
     dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
