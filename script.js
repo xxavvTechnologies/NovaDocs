@@ -28,21 +28,28 @@ const configureAuth0 = async () => {
 const updateUI = async () => {
     const isAuthenticated = await auth0.isAuthenticated();
     document.getElementById('login').style.display = isAuthenticated ? 'none' : 'block';
-    document.getElementById('logout').style.display = isAuthenticated ? 'block' : 'none';
+    document.getElementById('user-dropdown').style.display = isAuthenticated ? 'block' : 'none';
     
     if (isAuthenticated) {
         document.getElementById('editor').contentEditable = true;
         const user = await auth0.getUser();
+        const profileButton = document.getElementById('profile-button');
+        
         if (user.picture) {
-            const profilePicture = document.getElementById('profile-picture');
-            profilePicture.style.backgroundImage = `url(${user.picture})`;
-            profilePicture.style.display = 'block';
+            profileButton.innerHTML = `<img src="${user.picture}" alt="Profile Picture">`;
+        } else {
+            profileButton.innerHTML = '<i class="fas fa-user-circle"></i>';
         }
     } else {
         document.getElementById('editor').contentEditable = false;
-        document.getElementById('profile-picture').style.display = 'none';
     }
 };
+
+document.getElementById('logout').addEventListener('click', () => {
+    auth0.logout({
+        returnTo: 'https://docs.nova.xxavvgroup.com'
+    });
+});
 
 const getUserProfile = async () => {
     if (await auth0.isAuthenticated()) {

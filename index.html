@@ -7,14 +7,24 @@
     <link rel="icon" type="image/x-icon" href="https://i.ibb.co/Nsqsytw/Nova-Docs-w-o-text.png">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
     <header>
         <h1>Document Editor</h1>
         <div class="user-info">
             <button id="login">Login</button>
-            <button id="logout" style="display:none;">Logout</button>
-            <div id="profile-picture" style="display:none;"></div>
+            <div id="user-dropdown" class="dropdown" style="display:none;">
+                <button class="dropbtn" id="profile-button">
+                    <i class="fas fa-user-circle fa-2x"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="#" id="logout">Logout</a>
+                    <a href="#">Nova App 1</a>
+                    <a href="#">Nova App 2</a>
+                    <a href="#">Nova App 3</a>
+                </div>
+            </div>
         </div>
     </header>
     <main>
