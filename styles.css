@@ -27,7 +27,7 @@ h1 {
 
 /* Dropdown styles */
 .user-dropdown {
-    position: relative;
+    position: relative; /* Set parent to relative for absolute positioning of child */
 }
 
 .dropbtn {
@@ -46,79 +46,66 @@ h1 {
 }
 
 .dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    background: rgba(255, 255, 255, 0.7);
+    display: none; /* Hidden by default */
+    position: absolute; /* Position absolute to overlay */
+    top: calc(100% + 5px); /* Position below the button with a small gap */
+    right: 0; /* Align to the right */
+    background: rgba(255, 255, 255, 0.7); /* Slightly transparent background */
     backdrop-filter: blur(10px);
-    min-width: 220px;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-    border-radius: 10px;
-    overflow: hidden;
-    z-index: 1;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    min-width: 220px; /* Minimum width of dropdown */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px; /* Rounded corners */
+    overflow: hidden; /* Hide overflow content */
+    z-index: 1000; /* Ensure it appears above other elements */
 }
 
 .dropdown-content a {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    color: #333;
-    text-decoration: none;
-    font-size: 16px;
-    transition: background 0.3s;
+    display: flex; /* Flexbox for alignment */
+    align-items: center; /* Center vertically */
+    padding: 12px 16px; /* Padding for links */
+    color: #333; /* Text color */
+    text-decoration: none; /* Remove underline from links */
+    font-size: 16px; /* Font size for links */
+    transition: background-color 0.3s; /* Smooth background transition on hover */
 }
 
 .dropdown-content a:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-.dropdown-content a::before {
-    content: '';
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    margin-right: 10px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    background-color: rgba(255, 255, 255, 0.5); /* Change background on hover */
 }
 
 /* Editor styles */
 .editor {
-    width: 90%;
-    height: 500px;
-    margin: 30px auto;
-    padding: 25px;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    overflow-y: auto;
+    width: 90%; /* Width of the editor */
+    height: 500px; /* Height of the editor */
+    margin: 30px auto; /* Centered with margin */
+    padding: 25px; /* Padding inside the editor */
+    background: rgba(255, 255, 255, 0.25); /* Background with transparency */
+    backdrop-filter: blur(10px); /* Blur effect for glassmorphism */
+    border-radius: 15px; /* Rounded corners for editor */
+    box-shadow: 0px 4px 6px rgba(31,38,135,0.37); /* Shadow for depth effect */
 }
 
-/* Yellow accent */
+/* Yellow accent for editor border effect */
 .editor::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
-    background: linear-gradient(45deg, rgba(255,223,0,0.3), transparent);
-    z-index: -1;
-    filter: blur(20px);
-    border-radius: 20px;
+   content: '';
+   position: absolute; 
+   top: -5px; 
+   left: -5px; 
+   right: -5px; 
+   bottom: -5px; 
+   background: linear-gradient(45deg, rgba(255,223,0,0.3), transparent); 
+   z-index:-1; 
+   filter: blur(20px); 
+   border-radius:20px; 
 }
 
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .editor {
-        width: 95%;
-    }
+@media (max-width:768px) {
+   header {
+       flex-direction : column ; 
+       align-items : flex-start ; 
+   }
+   
+   .editor { 
+       width :95%; 
+   }
 }
