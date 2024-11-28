@@ -135,7 +135,45 @@ function printDocument() {
     // Restore the original content immediately after printing
     document.body.innerHTML = originalContents;
 
-    // Optional: Reattach any event listeners or scripts if necessary
+    // Reattach elements and event listeners
+    reattachElementsAndListeners();
+}
+
+function reattachElementsAndListeners() {
+    // Reassign DOM element references
+    editor = document.getElementById('editor');
+    saveBtn = document.getElementById('save-btn');
+    loadBtn = document.getElementById('load-btn');
+    newBtn = document.getElementById('new-btn');
+    printBtn = document.getElementById('print-btn');
+    fontSelect = document.getElementById('font-select');
+    fontSizeSelect = document.getElementById('font-size-select');
+    textColorInput = document.getElementById('text-color');
+    highlightColorInput = document.getElementById('highlight-color');
+    savedDocumentsModal = document.getElementById('saved-documents-modal');
+    savedDocumentsList = document.getElementById('saved-documents-list');
+    closeModalBtns = document.querySelectorAll('.close-btn');
+    driveLoginBtn = document.getElementById('google-login-btn');
+    driveSyncBtn = document.getElementById('drive-sync-btn');
+    driveSyncModal = document.getElementById('drive-sync-modal');
+    driveFileList = document.getElementById('drive-file-list');
+    themeSwitch = document.getElementById('theme-switch');
+
+    // Reattach event listeners
+    saveBtn.addEventListener('click', saveDocument);
+    loadBtn.addEventListener('click', loadDocument);
+    newBtn.addEventListener('click', newDocument);
+    printBtn.addEventListener('click', printDocument);
+    fontSelect.addEventListener('change', changeFontFamily);
+    fontSizeSelect.addEventListener('change', changeFontSize);
+    textColorInput.addEventListener('input', changeTextColor);
+    highlightColorInput.addEventListener('input', changeHighlightColor);
+    closeModalBtns.forEach(btn => btn.addEventListener('click', closeModal));
+    driveLoginBtn.addEventListener('click', handleGoogleLogin);
+    driveSyncBtn.addEventListener('click', handleDriveSync);
+    themeSwitch.addEventListener('change', toggleTheme);
+
+    // Any other necessary reattachments or reinitializations
 }
 
 // Google Drive Sync Functionality
@@ -268,10 +306,6 @@ function initEventListeners() {
     // Font and style listeners
     fontSelect.addEventListener('change', (e) => {
         format('fontName', e.target.value);
-    });
-
-    fontSizeSelect.addEventListener('change', (e) => {
-        format('fontSize', e.target.value);
     });
 
     textColorInput.addEventListener('change', (e) => {
