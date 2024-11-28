@@ -3,25 +3,25 @@ let auth0 = null;
 window.onload = async () => {
     await configureAuth0();
     
-    // Check for the code and state parameters
-    const query = window.location.search;
-    if (query.includes("code=") && query.includes("state=")) {
-        // Handle the redirect and retrieve the token
-        await auth0.handleRedirectCallback();
-        // Update the UI
-        updateUI();
-        // Remove the query parameters from the URL
-        window.history.replaceState({}, document.title, "/");
-    } else {
-        updateUI();
+    if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
+        try {
+            await auth0.handleRedirectCallback();
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+            console.error("Error handling redirect:", error);
+        }
     }
+    
+    await updateUI();
 };
 
 const configureAuth0 = async () => {
     auth0 = await createAuth0Client({
         domain: 'auth.novawerks.xxavvgroup.com',
         client_id: 'RGfDMp59V4UhqLIBZYwVZqHQwKly3lQ3',
-        redirect_uri: 'https://docs.nova.xxavvgroup.com/callback'
+        redirect_uri: 'https://docs.nova.xxavvgroup.com/callback',
+        useRefreshTokens: true,
+        cacheLocation: 'localstorage'
     });
 };
 
