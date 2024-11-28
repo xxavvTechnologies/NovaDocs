@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova Docs</title>
-    <link rel="icon" type="image/x-icon" href="https://i.ibb.co/Nsqsytw/Nova-Docs-w-o-text.png">
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
+    <title>Redirecting...</title>
+    <script>
+        // Preserve query parameters and hash
+        var queryParams = window.location.search;
+        var hash = window.location.hash;
+        
+        // Redirect to index.html with preserved information
+        window.location.href = '/index.html' + queryParams + hash;
+    </script>
 </head>
 <body>
-    <header>
-        <h1>Document Editor</h1>
-        <button id="login">Login</button>
-        <button id="logout" style="display:none;">Logout</button>
-    </header>
-    <main>
-        <div id="editor" contenteditable="true"></div>
-    </main>
-    <script src="script.js"></script>
+    <p>Redirecting...</p>
 </body>
 </html>

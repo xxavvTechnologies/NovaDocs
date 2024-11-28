@@ -19,7 +19,7 @@ const configureAuth0 = async () => {
     auth0 = await createAuth0Client({
         domain: 'auth.novawerks.xxavvgroup.com',
         client_id: 'RGfDMp59V4UhqLIBZYwVZqHQwKly3lQ3',
-        redirect_uri: 'https://docs.nova.xxavvgroup.com/callback',
+        redirect_uri: window.location.origin,
         useRefreshTokens: true,
         cacheLocation: 'localstorage'
     });
