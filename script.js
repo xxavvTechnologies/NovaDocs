@@ -1,22 +1,18 @@
 let auth0 = null;
 
 window.onload = async () => {
+    // Initialize Auth0 client
     await configureAuth0();
 
-    // Handle redirect if returning from login
-    if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
-        try {
-            await auth0.handleRedirectCallback();
-            window.history.replaceState({}, document.title, window.location.pathname);
-        } catch (error) {
-            console.error("Error handling redirect:", error);
-        }
+    // Handle the redirect if returning from login
+    if (window.location.search.includes("code=") || window.location.search.includes("state=")) {
+        await handleAuthRedirect();
     }
 
-    // Initialize UI
+    // Update the UI
     await updateUI();
 
-    // Attach event listener to dropdown button
+    // Attach event listener to the profile button
     const profileButton = document.getElementById("profile-button");
     profileButton.addEventListener("click", toggleDropdown);
 };
@@ -31,16 +27,27 @@ const configureAuth0 = async () => {
     });
 };
 
+const handleAuthRedirect = async () => {
+    try {
+        // Process the redirect callback and remove query parameters
+        await auth0.handleRedirectCallback();
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+        console.error("Error handling Auth0 redirect:", error);
+    }
+};
+
 const updateUI = async () => {
     const isAuthenticated = await auth0.isAuthenticated();
     const dropdownMenu = document.getElementById("dropdown-menu");
 
-    dropdownMenu.innerHTML = ""; // Clear menu before adding new items
+    // Clear and rebuild dropdown menu
+    dropdownMenu.innerHTML = "";
 
     if (isAuthenticated) {
         const user = await auth0.getUser();
 
-        // Add user-specific menu options
+        // Add user-specific options
         dropdownMenu.innerHTML += `<a href="#">Welcome, ${user.name || "User"}</a>`;
         dropdownMenu.innerHTML += `<a href="#">Nova App 1</a>`;
         dropdownMenu.innerHTML += `<a href="#">Nova App 2</a>`;
@@ -50,7 +57,7 @@ const updateUI = async () => {
             auth0.logout({ returnTo: window.location.origin });
         });
     } else {
-        // Show Login option if not authenticated
+        // Add login option if not authenticated
         dropdownMenu.innerHTML += `<a href="#" id="login">Login</a>`;
 
         document.getElementById("login").addEventListener("click", async () => {
