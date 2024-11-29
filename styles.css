@@ -1,111 +1,173 @@
 /* General styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); /* Soft yellow gradient background */
     min-height: 100vh;
+    color: #333;
+    line-height: 1.6;
 }
 
+/* Header Styles */
 header {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: #333;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 223, 0, 0.2);
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 15px 30px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(255, 223, 0, 0.1);
 }
 
 h1 {
     margin: 0;
     font-size: 24px;
     color: #333;
+    font-weight: 600;
 }
 
-/* Dropdown styles */
+/* User Dropdown Styles */
 .user-dropdown {
-    position: relative; /* Set parent to relative for absolute positioning of child */
+    position: relative;
 }
 
 .dropbtn {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 223, 0, 0.2);
     border: none;
     cursor: pointer;
     color: #333;
     font-size: 18px;
     padding: 10px 15px;
     border-radius: 20px;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
 }
 
 .dropbtn:hover {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 223, 0, 0.4);
+    transform: scale(1.05);
 }
 
 .dropdown-content {
-    display: none; /* Hidden by default */
-    position: absolute; /* Position absolute to overlay */
-    top: calc(100% + 5px); /* Position below the button with a small gap */
-    right: 0; /* Align to the right */
-    background: rgba(255, 255, 255, 0.7); /* Slightly transparent background */
-    backdrop-filter: blur(10px);
-    min-width: 220px; /* Minimum width of dropdown */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 10px; /* Rounded corners */
-    overflow: hidden; /* Hide overflow content */
-    z-index: 1000; /* Ensure it appears above other elements */
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    min-width: 250px;
+    box-shadow: 0 10px 20px rgba(255, 223, 0, 0.1);
+    border-radius: 15px;
+    overflow: hidden;
+    z-index: 1000;
+    border: 1px solid rgba(255, 223, 0, 0.1);
 }
 
 .dropdown-content a {
-    display: flex; /* Flexbox for alignment */
-    align-items: center; /* Center vertically */
-    padding: 12px 16px; /* Padding for links */
-    color: #333; /* Text color */
-    text-decoration: none; /* Remove underline from links */
-    font-size: 16px; /* Font size for links */
-    transition: background-color 0.3s; /* Smooth background transition on hover */
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    gap: 10px;
 }
 
 .dropdown-content a:hover {
-    background-color: rgba(255, 255, 255, 0.5); /* Change background on hover */
+    background-color: rgba(255, 223, 0, 0.2);
 }
 
-/* Editor styles */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 2px solid rgba(255, 223, 0, 0.3);
+}
+
+/* Editor Styles */
 .editor {
-    width: 90%; /* Width of the editor */
-    height: 500px; /* Height of the editor */
-    margin: 30px auto; /* Centered with margin */
-    padding: 25px; /* Padding inside the editor */
-    background: rgba(255, 255, 255, 0.25); /* Background with transparency */
-    backdrop-filter: blur(10px); /* Blur effect for glassmorphism */
-    border-radius: 15px; /* Rounded corners for editor */
-    box-shadow: 0px 4px 6px rgba(31,38,135,0.37); /* Shadow for depth effect */
+    width: 90%;
+    max-width: 1000px;
+    min-height: 500px;
+    margin: 30px auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    box-shadow: 
+        0 10px 30px rgba(255, 223, 0, 0.1),
+        0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 223, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
-/* Yellow accent for editor border effect */
-.editor::before {
-   content: '';
-   position: absolute; 
-   top: -5px; 
-   left: -5px; 
-   right: -5px; 
-   bottom: -5px; 
-   background: linear-gradient(45deg, rgba(255,223,0,0.3), transparent); 
-   z-index:-1; 
-   filter: blur(20px); 
-   border-radius:20px; 
+.editor:focus {
+    outline: none;
+    box-shadow: 
+        0 10px 30px rgba(255, 223, 0, 0.2),
+        0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-@media (max-width:768px) {
-   header {
-       flex-direction : column ; 
-       align-items : flex-start ; 
-   }
-   
-   .editor { 
-       width :95%; 
-   }
+/* Save Status Styles */
+.save-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 2000;
+}
+
+.save-status.success {
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+.save-status.error {
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .editor {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .dropdown-content {
+        min-width: 100%;
+        right: auto;
+        left: 0;
+    }
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 223, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 223, 0, 0.5);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 223, 0, 0.7);
 }
