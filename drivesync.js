@@ -187,30 +187,4 @@ class GoogleDriveSync {
     }
   }
   
-  // Usage example (to be implemented in your document editor)
-  /*
-  const driveSyncer = new GoogleDriveSync(
-    'YOUR_GOOGLE_CLIENT_ID', 
-    'YOUR_GOOGLE_API_KEY'
-  );
-  
-  // Authenticate
-  await driveSyncer.authenticate();
-  
-  // Upload a document
-  const fileId = await driveSyncer.uploadDocument('MyDocument.txt', documentContent);
-  
-  // List documents
-  const documentList = await driveSyncer.listDocuments();
-  
-  // Download a document
-  const content = await driveSyncer.downloadDocument(fileId);
-  
-  // Delete a document
-  await driveSyncer.deleteDocument(fileId);
-  
-  // Logout
-  await driveSyncer.logout();
-  */
-  
   export default GoogleDriveSync;
