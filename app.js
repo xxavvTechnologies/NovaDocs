@@ -1,18 +1,31 @@
-// app.js - Standalone Nova Docs for GitHub Pages
+// app.js - Nova Docs with Google Drive Integration
+
+// Import the GoogleDriveSync class from drivesync.js
+import GoogleDriveSync from './drivesync.js';
+
+// Configuration for Google Drive sync
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
+const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY';
 
 class NovaDocs {
     constructor() {
         this.editor = document.getElementById('editor');
         this.profileButton = document.getElementById('profile-button');
         this.dropdownMenu = document.getElementById('dropdown-menu');
+        this.driveSyncer = new GoogleDriveSync(GOOGLE_CLIENT_ID, GOOGLE_API_KEY);
         
         // Initialize local storage for documents if not exists
         if (!localStorage.getItem('novaDocs_documents')) {
             localStorage.setItem('novaDocs_documents', JSON.stringify([]));
         }
         
+        this.driveLoginButton = document.getElementById('drive-login-button');
+        this.driveSyncButton = document.getElementById('drive-sync-button');
+        this.driveListButton = document.getElementById('drive-list-button');
+
         this.initializeEventListeners();
         this.initializeFormattingBar();
+        this.initializeDriveSyncListeners();
     }
 
     initializeEventListeners() {
@@ -56,6 +69,166 @@ class NovaDocs {
             
             localStorage.setItem('novaDocs_documents', JSON.stringify(documents));
             this.showSaveStatus('Saved');
+        }
+    }
+
+    initializeDriveSyncListeners() {
+        // Login to Google Drive
+        if (this.driveLoginButton) {
+            this.driveLoginButton.addEventListener('click', async () => {
+                try {
+                    await this.driveSyncer.authenticate();
+                    this.showSaveStatus('Google Drive Connected');
+                    this.updateDriveSyncUI(true);
+                } catch (error) {
+                    this.showSaveStatus('Drive Connection Failed', true);
+                }
+            });
+        }
+
+        // Sync current document to Google Drive
+        if (this.driveSyncButton) {
+            this.driveSyncButton.addEventListener('click', () => this.syncDocumentToDrive());
+        }
+
+        // List documents from Google Drive
+        if (this.driveListButton) {
+            this.driveListButton.addEventListener('click', () => this.listDriveDocuments());
+        }
+    }
+
+    // Update UI based on Drive sync status
+    updateDriveSyncUI(isConnected) {
+        if (this.driveLoginButton) {
+            this.driveLoginButton.style.display = isConnected ? 'none' : 'block';
+        }
+        if (this.driveSyncButton) {
+            this.driveSyncButton.style.display = isConnected ? 'block' : 'none';
+        }
+        if (this.driveListButton) {
+            this.driveListButton.style.display = isConnected ? 'block' : 'none';
+        }
+    }
+
+    // Sync current document to Google Drive
+    async syncDocumentToDrive() {
+        if (!this.currentDocument) {
+            this.showSaveStatus('No document to sync', true);
+            return;
+        }
+
+        try {
+            // Ensure authentication
+            await this.driveSyncer.authenticate();
+
+            // Get document content and title
+            const documentContent = this.editor.innerHTML;
+            const documentName = this.currentDocument.title || 'Untitled Document';
+
+            // Upload to Google Drive
+            const fileId = await this.driveSyncer.uploadDocument(documentName, documentContent);
+
+            // Update current document with Drive file ID
+            this.currentDocument.driveFileId = fileId;
+            this.updateDocumentInLocalStorage(this.currentDocument);
+
+            this.showSaveStatus('Document Synced to Drive');
+        } catch (error) {
+            console.error('Drive sync error:', error);
+            this.showSaveStatus('Sync to Drive Failed', true);
+        }
+    }
+
+    // List documents from Google Drive
+    async listDriveDocuments() {
+        try {
+            // Ensure authentication
+            await this.driveSyncer.authenticate();
+
+            // Fetch documents
+            const driveDocuments = await this.driveSyncer.listDocuments();
+
+            // Clear existing dropdown
+            this.dropdownMenu.innerHTML = '';
+
+            // Add Drive documents section
+            const driveSection = document.createElement('div');
+            driveSection.className = 'drive-documents-section';
+            driveSection.innerHTML = '<h3>Google Drive Documents</h3>';
+
+            driveDocuments.forEach(doc => {
+                const docOption = document.createElement('div');
+                docOption.className = 'document-option drive-document';
+                
+                const docTitle = document.createElement('a');
+                docTitle.href = '#';
+                docTitle.textContent = doc.name;
+                docTitle.addEventListener('click', () => this.loadDriveDocument(doc.id));
+                docOption.appendChild(docTitle);
+
+                driveSection.appendChild(docOption);
+            });
+
+            this.dropdownMenu.appendChild(driveSection);
+        } catch (error) {
+            console.error('Error listing Drive documents:', error);
+            this.showSaveStatus('Failed to list Drive documents', true);
+        }
+    }
+
+    // Load a document from Google Drive
+    async loadDriveDocument(fileId) {
+        try {
+            // Download document content
+            const documentContent = await this.driveSyncer.downloadDocument(fileId);
+
+            // Create a new local document from Drive document
+            const newDocument = {
+                id: `doc_${Date.now()}`,
+                title: 'Drive Document',
+                content: documentContent,
+                created: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
+                driveFileId: fileId
+            };
+
+            // Save to local storage
+            const documents = JSON.parse(localStorage.getItem('novaDocs_documents')) || [];
+            documents.push(newDocument);
+            localStorage.setItem('novaDocs_documents', JSON.stringify(documents));
+
+            // Load the document
+            this.currentDocument = newDocument;
+            this.editor.innerHTML = documentContent;
+            this.updateDocumentsList();
+
+            this.showSaveStatus('Document Loaded from Drive');
+        } catch (error) {
+            console.error('Error loading Drive document:', error);
+            this.showSaveStatus('Failed to load Drive document', true);
+        }
+    }
+
+    // Update document in local storage
+    updateDocumentInLocalStorage(updatedDocument) {
+        const documents = JSON.parse(localStorage.getItem('novaDocs_documents')) || [];
+        const docIndex = documents.findIndex(doc => doc.id === updatedDocument.id);
+
+        if (docIndex !== -1) {
+            documents[docIndex] = updatedDocument;
+            localStorage.setItem('novaDocs_documents', JSON.stringify(documents));
+        }
+    }
+
+    // Logout from Google Drive
+    async logoutFromDrive() {
+        try {
+            await this.driveSyncer.logout();
+            this.updateDriveSyncUI(false);
+            this.showSaveStatus('Logged out of Google Drive');
+        } catch (error) {
+            console.error('Logout error:', error);
+            this.showSaveStatus('Logout Failed', true);
         }
     }
 
@@ -303,8 +476,17 @@ class NovaDocs {
                 (!latest || new Date(doc.lastModified) > new Date(latest.lastModified)) ? doc : latest
             );
             this.loadDocument(latestDoc.id);
+
+        const documents = JSON.parse(localStorage.getItem('novaDocs_documents')) || [];
+        const driveDocuments = documents.filter(doc => doc.driveFileId);
+        
+        if (driveDocuments.length > 0) {
+            // Optionally add a notification about synced documents
+            console.log('You have documents previously synced with Drive');
         }
     }
+
+}
 }
 
 // Initialize the application when DOM is fully loaded
