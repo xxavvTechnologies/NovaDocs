@@ -61,7 +61,6 @@ const updateUI = async () => {
             <a href="https://app2.nova.xxavvgroup.com" class="nova-app-link">Nova App</a>`;
 
         dropdownMenu.innerHTML += `
-        <a href="#" id="drive-login-button" class="nova-app-link">Connect to Google Drive</a>
             <a href="#" id="logout" class="logout-link">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </a>`;
