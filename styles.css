@@ -9,6 +9,10 @@ body {
     line-height: 1.6;
 }
 
+main {
+    margin-top: 0;
+}
+
 /* Header Styles */
 header {
     background: rgba(255, 255, 255, 0.6);
@@ -102,6 +106,7 @@ h1 {
         0 4px 15px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(255, 223, 0, 0.1);
     transition: all 0.3s ease;
+    margin-top: 0;
 }
 
 .editor:focus {
@@ -170,4 +175,91 @@ h1 {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 223, 0, 0.7);
+}
+
+/* Formatting Bar Styles */
+.formatting-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(255, 223, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.formatting-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.formatting-select {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 223, 0, 0.2);
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.formatting-select:hover {
+    background: rgba(255, 223, 0, 0.1);
+    border-color: rgba(255, 223, 0, 0.4);
+}
+
+.formatting-btn {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 16px;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.formatting-btn:hover {
+    background: rgba(255, 223, 0, 0.2);
+}
+
+.formatting-btn.active {
+    background: rgba(255, 223, 0, 0.4);
+}
+
+.formatting-color-picker {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .formatting-bar {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .formatting-group {
+        gap: 5px;
+    }
+    
+    .formatting-btn {
+        font-size: 14px;
+        padding: 5px;
+    }
+    
+    .formatting-select {
+        font-size: 12px;
+        padding: 3px 5px;
+    }
 }

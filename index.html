@@ -21,6 +21,71 @@
             </div>
         </div>
     </header>
+    
+    <!-- New Formatting Bar -->
+    <div class="formatting-bar">
+        <div class="formatting-group">
+            <select id="font-select" class="formatting-select">
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Verdana">Verdana</option>
+            </select>
+            <select id="font-size-select" class="formatting-select">
+                <option value="12">12</option>
+                <option value="14">14</option>
+                <option value="16">16</option>
+                <option value="18">18</option>
+                <option value="20">20</option>
+                <option value="24">24</option>
+            </select>
+        </div>
+        
+        <div class="formatting-group">
+            <button class="formatting-btn" data-command="bold" title="Bold">
+                <i class="fas fa-bold"></i>
+            </button>
+            <button class="formatting-btn" data-command="italic" title="Italic">
+                <i class="fas fa-italic"></i>
+            </button>
+            <button class="formatting-btn" data-command="underline" title="Underline">
+                <i class="fas fa-underline"></i>
+            </button>
+            <button class="formatting-btn" data-command="strikethrough" title="Strikethrough">
+                <i class="fas fa-strikethrough"></i>
+            </button>
+        </div>
+        
+        <div class="formatting-group">
+            <button class="formatting-btn" data-command="justifyLeft" title="Align Left">
+                <i class="fas fa-align-left"></i>
+            </button>
+            <button class="formatting-btn" data-command="justifyCenter" title="Align Center">
+                <i class="fas fa-align-center"></i>
+            </button>
+            <button class="formatting-btn" data-command="justifyRight" title="Align Right">
+                <i class="fas fa-align-right"></i>
+            </button>
+            <button class="formatting-btn" data-command="justifyFull" title="Justify">
+                <i class="fas fa-align-justify"></i>
+            </button>
+        </div>
+        
+        <div class="formatting-group">
+            <button class="formatting-btn" data-command="insertUnorderedList" title="Unordered List">
+                <i class="fas fa-list-ul"></i>
+            </button>
+            <button class="formatting-btn" data-command="insertOrderedList" title="Ordered List">
+                <i class="fas fa-list-ol"></i>
+            </button>
+        </div>
+        
+        <div class="formatting-group">
+            <input type="color" id="text-color-picker" class="formatting-color-picker" title="Text Color">
+            <input type="color" id="highlight-color-picker" class="formatting-color-picker" title="Highlight Color">
+        </div>
+    </div>
+    
     <main>
         <div id="editor" contenteditable="true" class="editor">
             Start editing your document here...

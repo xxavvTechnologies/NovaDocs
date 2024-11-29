@@ -12,6 +12,7 @@ class NovaDocs {
         }
         
         this.initializeEventListeners();
+        this.initializeFormattingBar();
     }
 
     initializeEventListeners() {
@@ -24,6 +25,8 @@ class NovaDocs {
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+        this.editor.addEventListener('mouseup', () => this.updateFormattingState());
+        this.editor.addEventListener('keyup', () => this.updateFormattingState());
     }
 
     // Debounce function to limit auto-save frequency
@@ -75,6 +78,16 @@ class NovaDocs {
         if (!this.currentDocument) return;
         // Could be used for local tracking or future features
         console.log('Document activity tracked', this.currentDocument.id);
+    }
+
+    updateFormattingState() {
+        const boldBtn = document.querySelector('.formatting-btn[data-command="bold"]');
+        const italicBtn = document.querySelector('.formatting-btn[data-command="italic"]');
+        const underlineBtn = document.querySelector('.formatting-btn[data-command="underline"]');
+    
+        boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+        italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+        underlineBtn.classList.toggle('active', document.queryCommandState('underline'));
     }
 
     // Keyboard shortcuts handler
@@ -174,6 +187,53 @@ class NovaDocs {
             
             this.updateDocumentsList();
         }
+    }
+
+    initializeFormattingBar() {
+        // Formatting buttons
+        const formattingButtons = document.querySelectorAll('.formatting-btn');
+        formattingButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const command = button.dataset.command;
+                document.execCommand(command, false, null);
+                
+                // Toggle active state for some buttons
+                if (command === 'bold' || command === 'italic' || command === 'underline') {
+                    button.classList.toggle('active');
+                }
+                
+                // Restore focus to editor
+                this.editor.focus();
+            });
+        });
+    
+        // Font family selector
+        const fontSelect = document.getElementById('font-select');
+        fontSelect.addEventListener('change', (e) => {
+            document.execCommand('fontName', false, e.target.value);
+            this.editor.focus();
+        });
+    
+        // Font size selector
+        const fontSizeSelect = document.getElementById('font-size-select');
+        fontSizeSelect.addEventListener('change', (e) => {
+            document.execCommand('fontSize', false, e.target.value);
+            this.editor.focus();
+        });
+    
+        // Text color picker
+        const textColorPicker = document.getElementById('text-color-picker');
+        textColorPicker.addEventListener('change', (e) => {
+            document.execCommand('foreColor', false, e.target.value);
+            this.editor.focus();
+        });
+    
+        // Highlight color picker
+        const highlightColorPicker = document.getElementById('highlight-color-picker');
+        highlightColorPicker.addEventListener('change', (e) => {
+            document.execCommand('hiliteColor', false, e.target.value);
+            this.editor.focus();
+        });
     }
 
     // Update documents list in dropdown
