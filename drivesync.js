@@ -7,50 +7,73 @@ class GoogleDriveSync {
       this.accessToken = null;
     }
   
-    // Initialize Google API client
+    // Initialize Google API client using modern Google Identity Services
     async initializeGoogleAPI() {
       if (this.isInitialized) return;
   
       return new Promise((resolve, reject) => {
-        // Load the Google API client library
-        const script = document.createElement('script');
-        script.src = 'https://apis.google.com/js/api.js';
-        script.onload = () => {
-          window.gapi.load('client:auth2', () => {
+        // Load the Google API client and Google Sign-In library
+        const gapiScript = document.createElement('script');
+        gapiScript.src = 'https://apis.google.com/js/api.js';
+        
+        const gsiScript = document.createElement('script');
+        gsiScript.src = 'https://accounts.google.com/gsi/client';
+        
+        gsiScript.onload = () => {
+          // Initialize Google Identity Services
+          window.google.accounts.id.initialize({
+            client_id: this.clientId,
+            callback: this.handleCredentialResponse.bind(this)
+          });
+  
+          this.isInitialized = true;
+          resolve();
+        };
+  
+        gapiScript.onload = () => {
+          window.gapi.load('client', () => {
             window.gapi.client.init({
               apiKey: this.apiKey,
-              clientId: this.clientId,
               discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-              scope: 'https://www.googleapis.com/auth/drive.file'
             }).then(() => {
-              this.isInitialized = true;
-              resolve();
-            }).catch((error) => {
-              console.error('Error initializing Google API client', error);
-              reject(error);
-            });
+              document.body.appendChild(gsiScript);
+            }).catch(reject);
           });
         };
-        script.onerror = reject;
-        document.body.appendChild(script);
+  
+        gapiScript.onerror = reject;
+        document.body.appendChild(gapiScript);
       });
+    }
+  
+    // Handle credential response from Google Sign-In
+    handleCredentialResponse(response) {
+      this.accessToken = response.credential;
     }
   
     // Authenticate user and get access token
     async authenticate() {
       await this.initializeGoogleAPI();
   
-      try {
-        // Try to sign in silently first
-        await window.gapi.auth2.getAuthInstance().signInSilently();
-      } catch {
-        // If silent sign-in fails, prompt user
-        await window.gapi.auth2.getAuthInstance().signIn();
-      }
+      return new Promise((resolve, reject) => {
+        // Prompt Google Sign-In
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed()) {
+            console.log('Authentication prompt not displayed');
+            reject(new Error('Authentication failed'));
+          }
+        });
   
-      // Get the access token
-      this.accessToken = window.gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
-      return this.accessToken;
+        // Set up a callback to handle successful authentication
+        window.google.accounts.id.setTokenClient({
+          client_id: this.clientId,
+          scope: 'https://www.googleapis.com/auth/drive.file',
+          callback: (tokenResponse) => {
+            this.accessToken = tokenResponse.access_token;
+            resolve(this.accessToken);
+          }
+        });
+      });
     }
   
     // Upload document to Google Drive
@@ -156,9 +179,8 @@ class GoogleDriveSync {
   
     // Logout method to revoke access
     async logout() {
-      if (window.gapi.auth2) {
-        const authInstance = window.gapi.auth2.getAuthInstance();
-        await authInstance.signOut();
+      if (window.google && window.google.accounts) {
+        window.google.accounts.id.disableAutoSelect();
         this.accessToken = null;
         this.isInitialized = false;
       }
