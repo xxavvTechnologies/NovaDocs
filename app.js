@@ -4,8 +4,8 @@
 import GoogleDriveSync from './drivesync.js';
 
 // Configuration for Google Drive sync
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
-const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY';
+const GOOGLE_CLIENT_ID = '139502800975-lqhp99o1t4pqv7tkjcodunqch8b4vbut.apps.googleusercontent.com';
+const GOOGLE_API_KEY = 'AIzaSyBtIKYVjyfyhCXIkXHAsVvnyVSbNFZ_9HM';
 
 class NovaDocs {
     constructor() {
@@ -477,7 +477,6 @@ class NovaDocs {
             );
             this.loadDocument(latestDoc.id);
 
-        const documents = JSON.parse(localStorage.getItem('novaDocs_documents')) || [];
         const driveDocuments = documents.filter(doc => doc.driveFileId);
         
         if (driveDocuments.length > 0) {
