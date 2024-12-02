@@ -6,23 +6,17 @@
     <title>Nova Docs</title>
     <link rel="icon" type="image/x-icon" href="https://i.ibb.co/Nsqsytw/Nova-Docs-w-o-text.png">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
     <header>
         <h1>Nova Docs</h1>
-        <a href="#" id="drive-login-button" class="nova-app-link">Connect to Google Drive</a>
-        <button id="drive-sync-button" style="display:none;">Sync to Drive</button>
-        <button id="drive-list-button" style="display:none;">List Drive Documents</button>
         <div class="user-dropdown">
             <button class="dropbtn" id="profile-button">
                 <i class="fas fa-user-circle"></i>
             </button>
             <div class="dropdown-content" id="dropdown-menu">
-                <!-- Options dynamically loaded based on authentication status -->
+                <!-- Placeholder for user dropdown links -->
             </div>
         </div>
     </header>
@@ -91,13 +85,14 @@
         </div>
     </div>
     
+    <!-- Main Editor Area -->
     <main>
         <div id="editor" contenteditable="true" class="editor">
             Start editing your document here...
         </div>
     </main>
+
     <script src="authentication.js"></script>
-    <script src="drivesync.js" type="module"></script>
     <script src="app.js" type="module"></script>
 </body>
 </html>
