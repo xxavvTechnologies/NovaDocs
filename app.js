@@ -32,10 +32,50 @@ document.addEventListener('DOMContentLoaded', () => {
     formattingButtons.forEach(button => {
         button.addEventListener('click', () => {
             const command = button.dataset.command;
-            document.execCommand(command, false, null);
+            applyTextFormat(command);
             editor.focus();
         });
     });
+
+    // Apply formatting function
+    function applyTextFormat(command) {
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        const selectedText = range.toString();
+        
+        switch(command) {
+            case 'bold':
+                document.execCommand('bold');
+                break;
+            case 'italic':
+                document.execCommand('italic');
+                break;
+            case 'underline':
+                document.execCommand('underline');
+                break;
+            case 'strikethrough':
+                document.execCommand('strikethrough');
+                break;
+            case 'justifyLeft':
+                document.execCommand('justifyLeft');
+                break;
+            case 'justifyCenter':
+                document.execCommand('justifyCenter');
+                break;
+            case 'justifyRight':
+                document.execCommand('justifyRight');
+                break;
+            case 'justifyFull':
+                document.execCommand('justifyFull');
+                break;
+            case 'insertUnorderedList':
+                document.execCommand('insertUnorderedList');
+                break;
+            case 'insertOrderedList':
+                document.execCommand('insertOrderedList');
+                break;
+        }
+    }
 
     // Font family selection
     fontSelect.addEventListener('change', (e) => {
@@ -66,27 +106,27 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ctrl+B for Bold
         if (e.ctrlKey && e.key === 'b') {
             e.preventDefault();
-            document.execCommand('bold', false, null);
+            applyTextFormat('bold');
         }
         // Ctrl+I for Italic
         if (e.ctrlKey && e.key === 'i') {
             e.preventDefault();
-            document.execCommand('italic', false, null);
+            applyTextFormat('italic');
         }
         // Ctrl+U for Underline
         if (e.ctrlKey && e.key === 'u') {
             e.preventDefault();
-            document.execCommand('underline', false, null);
+            applyTextFormat('underline');
         }
         // Ctrl+Z for Undo
         if (e.ctrlKey && e.key === 'z') {
             e.preventDefault();
-            document.execCommand('undo', false, null);
+            document.execCommand('undo');
         }
         // Ctrl+Y for Redo
         if (e.ctrlKey && e.key === 'y') {
             e.preventDefault();
-            document.execCommand('redo', false, null);
+            document.execCommand('redo');
         }
     });
 
