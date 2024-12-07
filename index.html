@@ -11,7 +11,7 @@
 </head>
 <body>
     <header>
-        <h1>Nova Docs</h1>
+        <img src="https://i.ibb.co/Nsqsytw/Nova-Docs-w-o-text.png" alt="Nova Docs" height="45">
         <div class="user-dropdown">
             <button class="dropbtn" id="profile-button">
                 <i class="fas fa-user-circle"></i>
@@ -21,6 +21,40 @@
             </div>
         </div>
     </header>
+    
+    <!-- Document Name Input -->
+    <div class="document-actions">
+        <input 
+            type="text" 
+            id="document-name" 
+            placeholder="Enter document name" 
+            class="document-name-input"
+        >
+        <div class="document-buttons">
+            <button id="save-document" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save
+            </button>
+            <button id="new-document" class="btn btn-secondary">
+                <i class="fas fa-plus"></i> New
+            </button>
+            <button id="export-txt" class="btn btn-export">
+                <i class="fas fa-file-export"></i> Export TXT
+            </button>
+            <button id="export-html" class="btn btn-export">
+                <i class="fas fa-file-code"></i> Export HTML
+            </button>
+        </div>
+    </div>
+
+    <!-- Document List -->
+    <div class="document-list-container">
+        <button class="btn btn-secondary toggle-list" id="toggle-document-list">
+            <i class="fas fa-chevron-down"></i> Show Documents
+        </button>
+        <div id="document-list" class="document-list" style="display: none;">
+            <!-- Dynamically populated list of saved documents -->
+        </div>
+    </div>
     
     <!-- New Formatting Bar -->
     <div class="formatting-bar">
@@ -32,12 +66,12 @@
                 <option value="Verdana">Verdana</option>
             </select>
             <select id="font-size-select" class="formatting-select">
-                <option value="12">12</option>
-                <option value="14">14</option>
-                <option value="16">16</option>
-                <option value="18">18</option>
-                <option value="20">20</option>
-                <option value="24">24</option>
+                <option value="1">12</option>
+                <option value="2">14</option>
+                <option value="3">16</option>
+                <option value="4">18</option>
+                <option value="5">20</option>
+                <option value="6">24</option>
             </select>
         </div>
         
@@ -89,7 +123,6 @@
     <!-- Main Editor Area -->
     <main>
         <div id="editor" contenteditable="true" class="editor">
-            Start editing your document here...
         </div>
     </main>
 
@@ -100,6 +133,19 @@
             var dropdown = document.querySelector(".user-dropdown");
             dropdown.classList.toggle("active");
         });
+
+        document.getElementById("toggle-document-list").addEventListener("click", function () {
+    const documentList = document.getElementById("document-list");
+    const toggleButton = this;
+
+    if (documentList.style.display === "none") {
+        documentList.style.display = "block";
+        toggleButton.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Documents';
+    } else {
+        documentList.style.display = "none";
+        toggleButton.innerHTML = '<i class="fas fa-chevron-down"></i> Show Documents';
+    }
+});
     </script>
 </body>
 </html>
