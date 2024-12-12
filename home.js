@@ -1,3 +1,5 @@
+//home.js
+
 document.addEventListener('DOMContentLoaded', () => {
     const documentListContainer = document.getElementById('document-list');
     const templatesContainer = document.getElementById('templates-container');
