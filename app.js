@@ -1,5 +1,4 @@
 // Nova Docs Editor Main Application Logic with Local Storage Document Management
-//app.js
 
 document.addEventListener('DOMContentLoaded', () => {
     // Element selections with error handling
@@ -31,10 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Document management class with enhanced error handling
     class DocumentManager {
         static STORAGE_KEY = 'novaDocs-documents';
         static MAX_DOCUMENTS = 100; // Prevent unlimited storage
-    
+
+        // Get all saved documents with error handling
         static getDocuments() {
             try {
                 const docs = localStorage.getItem(this.STORAGE_KEY);
@@ -44,19 +45,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 return {};
             }
         }
-    
+
+        // Save a document with additional validations
         static saveDocument(name, content) {
             if (!name) {
                 throw new Error('Document name cannot be empty');
             }
+
             try {
                 const documents = this.getDocuments();
+
+                // Check storage limit
+                if (Object.keys(documents).length >= this.MAX_DOCUMENTS) {
+                    throw new Error('Maximum number of documents reached');
+                }
+
+                // Sanitize document name
                 const sanitizedName = this.sanitizeFileName(name);
+
                 documents[sanitizedName] = {
                     content: content,
                     lastEditDate: new Date().toISOString(),
                     characterCount: content.length
                 };
+
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(documents));
                 return sanitizedName;
             } catch (error) {
@@ -65,16 +77,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return null;
             }
         }
-    
+
+        // Sanitize file name to prevent invalid characters
         static sanitizeFileName(name) {
             return name.replace(/[<>:"/\\|?*]/g, '').trim();
         }
-    
+
+        // Load a document with error handling
         static loadDocument(name) {
             const documents = this.getDocuments();
             return documents[name] || null;
         }
-    
+
+        // Delete a document
         static deleteDocument(name) {
             try {
                 const documents = this.getDocuments();
@@ -89,23 +104,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render document list with improved UI
         static renderDocumentList() {
-            // Load document from URL parameter
-const urlParams = new URLSearchParams(window.location.search);
-const docName = urlParams.get('doc');
-if (docName) {
-    const doc = DocumentManager.loadDocument(docName);
-    if (doc) {
-        documentNameInput.value = docName;
-        editor.innerHTML = doc.content;
-    }
-}
+            const documents = this.getDocuments();
+            const listContainer = documentListContainer;
+            listContainer.innerHTML = '';
 
-// Load template from sessionStorage
-const templateContent = sessionStorage.getItem('novaDocsTemplate');
-if (templateContent) {
-    editor.innerHTML = templateContent;
-    sessionStorage.removeItem('novaDocsTemplate');
-}
+            // Sort documents by last edit date (most recent first)
+            const sortedDocuments = Object.entries(documents)
+                .sort(([, a], [, b]) => new Date(b.lastEditDate) - new Date(a.lastEditDate));
+
+            if (sortedDocuments.length === 0) {
+                const noDocsMessage = document.createElement('div');
+                noDocsMessage.textContent = 'No documents saved yet';
+                noDocsMessage.className = 'text-center text-gray-500 p-4';
+                listContainer.appendChild(noDocsMessage);
+                return;
+            }
+
+            sortedDocuments.forEach(([name, doc]) => {
+                const docElement = document.createElement('div');
+                docElement.className = 'document-item flex justify-between items-center p-2 hover:bg-gray-100 cursor-pointer';
+                
+                const detailsContainer = document.createElement('div');
+                detailsContainer.className = 'flex flex-col';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = name;
+                nameSpan.className = 'font-medium';
+                nameSpan.addEventListener('click', () => {
+                    documentNameInput.value = name;
+                    editor.innerHTML = doc.content;
+                });
+
+                const lastEditSpan = document.createElement('small');
+                lastEditSpan.textContent = `Last edited: ${new Date(doc.lastEditDate).toLocaleString()}`;
+                lastEditSpan.className = 'text-xs text-gray-500';
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '✖';
+                deleteButton.className = 'text-red-500 hover:text-red-700';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Are you sure you want to delete "${name}"?`)) {
+                        this.deleteDocument(name);
+                        this.renderDocumentList();
+                    }
+                });
+
+                detailsContainer.appendChild(nameSpan);
+                detailsContainer.appendChild(lastEditSpan);
+                
+                docElement.appendChild(detailsContainer);
+                docElement.appendChild(deleteButton);
+                listContainer.appendChild(docElement);
+            });
+        }
+    }
 
     // Autosave functionality with debounce
     let saveTimeout;
@@ -129,13 +182,13 @@ if (templateContent) {
             const content = editor.innerHTML;
             const savedName = DocumentManager.saveDocument(documentName, content);
             if (savedName) {
+                DocumentManager.renderDocumentList();
                 alert(`Document "${savedName}" saved successfully!`);
             }
         } else {
             alert('Please enter a document name');
         }
     });
-    
 
     newDocumentButton.addEventListener('click', () => {
         documentNameInput.value = '';
@@ -326,4 +379,4 @@ if (templateContent) {
         exportDocument,
         DocumentManager
     };
-}}});
+});
