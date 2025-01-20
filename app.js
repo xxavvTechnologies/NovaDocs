@@ -133,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(documents));
                 NotificationSystem.success(isNew ? 'Document created successfully' : 'Document saved successfully');
+                this.updateDocumentCount();
                 return sanitizedName;
             } catch (error) {
                 NotificationSystem.error('Failed to save document: ' + error.message);
@@ -158,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 delete documents[name];
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(documents));
                 NotificationSystem.success('Document deleted successfully');
+                this.updateDocumentCount();
                 return true;
             } catch (error) {
                 NotificationSystem.error('Failed to delete document: ' + error.message);
@@ -220,6 +222,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 docElement.appendChild(deleteButton);
                 listContainer.appendChild(docElement);
             });
+            this.updateDocumentCount();
+        }
+
+        // Add new method to update document count
+        static updateDocumentCount() {
+            const documents = this.getDocuments();
+            const count = Object.keys(documents).length;
+            const countElement = document.getElementById('document-count');
+            if (countElement) {
+                countElement.textContent = `${count} / ${this.MAX_DOCUMENTS}`;
+            }
         }
     }
 
@@ -611,4 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
             img.style.height = 'auto';
         }
     };
+
+    // Add initial count update when page loads
+    DocumentManager.updateDocumentCount();
 });

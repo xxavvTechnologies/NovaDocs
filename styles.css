@@ -717,3 +717,65 @@ button:disabled:hover {
 .update-banner .close-banner:hover {
     color: #047857;
 }
+
+/* Logo Menu Styles */
+.logo-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.logo-container img {
+    cursor: pointer;
+}
+
+.logo-submenu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: #ffffff;
+    min-width: 300px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: 9999;
+    border: 1px solid #d1dce6;
+    padding: 16px;
+}
+
+.logo-container:hover .logo-submenu {
+    display: block;
+}
+
+.logo-submenu h3 {
+    margin: 0 0 12px 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.app-info {
+    font-size: 14px;
+    color: #34495e;
+    margin-bottom: 16px;
+}
+
+.app-info p {
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.app-info .label {
+    color: #7f8c8d;
+}
+
+.logo-submenu a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.logo-submenu a:hover {
+    text-decoration: underline;
+}

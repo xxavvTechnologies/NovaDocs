@@ -11,7 +11,52 @@
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova Docs</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>Nova Docs - Professional Online Document Editor</title>
+    <meta name="description" content="Nova Docs is a powerful, free online document editor. Create, edit, and share documents easily.">
+    <meta name="keywords" content="document editor, online editor, text editor, rich text editor, Nova Docs">
+    <meta name="author" content="xxavvTechnologies">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://docs.nova.xxavvgroup.com/">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Nova Docs - Online Document Editor">
+    <meta property="og:description" content="Create and edit documents with Nova Docs' powerful online editor. Free, secure, and easy to use.">
+    <meta property="og:image" content="https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Preview.png">
+    <meta property="og:url" content="https://docs.nova.xxavvgroup.com/">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Nova Docs - Professional Online Document Editor">
+    <meta name="twitter:description" content="Create and edit documents with Nova Docs' powerful online editor. Free, secure, and easy to use.">
+    <meta name="twitter:image" content="https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Preview.png">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Nova Docs",
+        "applicationCategory": "Document Editor",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "xxavvTechnologies",
+            "url": "https://tech.xxavvgroup.com"
+        },
+        "description": "A powerful, free online document editor. Create, edit, and share documents easily.",
+        "image": "https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png",
+        "screenshot": "https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Preview.png"
+    }
+    </script>
+
     <link rel="icon" type="image/x-icon" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
@@ -26,7 +71,21 @@
         <button class="close-banner" onclick="dismissBanner()">×</button>
     </div>
     <header>
-        <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs" height="45">
+        <div class="logo-container">
+            <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs" height="45">
+            <div class="logo-submenu">
+                <h3>Nova Docs</h3>
+                <div class="app-info">
+                    <p><span class="label">Documents:</span> <span id="document-count">Loading...</span></p>
+                    <p><span class="label">Version:</span> <span>2.5</span></p>
+                    <p><span class="label">Developer:</span> <span>xxavvTechnologies</span></p>
+                    <p><span class="label">Last Updated:</span> <span>January 19, 2025</span></p>
+                </div>
+                <a href="https://tech.xxavvgroup.com/nova/docs" target="_blank">
+                    Legal & Technical Information →
+                </a>
+            </div>
+        </div>
         <div class="user-dropdown">
             <button class="dropbtn" id="profile-button">
                 <i class="fas fa-user-circle"></i>
