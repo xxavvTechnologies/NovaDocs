@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fontSizeSelect = document.getElementById('font-size-select');
     const textColorPicker = document.getElementById('text-color-picker');
     const highlightColorPicker = document.getElementById('highlight-color-picker');
+    // Document management elements
+    // Document management elements
     const documentNameInput = document.getElementById('document-name');
     const documentListContainer = document.getElementById('document-list');
     const saveDocumentButton = document.getElementById('save-document');
@@ -40,10 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Add close handler for comment sidebar
-    document.querySelector('#comment-sidebar .close-btn')?.addEventListener('click', () => {
-        document.getElementById('comment-sidebar').style.display = 'none';
-    });
+        // Add close handler for comment sidebar
+        document.querySelector('#comment-sidebar .close-btn')?.addEventListener('click', () => {
+            document.getElementById('comment-sidebar').style.display = 'none';
+        });
 
     // Document management class with enhanced error handling
     class DocumentManager {
@@ -195,55 +197,55 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Add image button event listener
-    document.querySelector('[data-command="insertImage"]').addEventListener('click', () => {
-        TextFormatter.insertImage();
-    });
+document.querySelector('[data-command="insertImage"]').addEventListener('click', () => {
+    TextFormatter.insertImage();
 
     const APP_VERSION = '2.5.0'; // Update this when releasing new versions
     const LAST_SEEN_VERSION_KEY = 'novaDocs-lastSeenVersion';
 
-    function checkForUpdates() {
-        const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
-        
-        if (!lastSeenVersion || lastSeenVersion !== APP_VERSION) {
-            showUpdateNotification();
-        }
+function checkForUpdates() {
+    const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
+    
+    if (!lastSeenVersion || lastSeenVersion !== APP_VERSION) {
+        showUpdateNotification();
     }
+}
 
-    function showUpdateNotification() {
-        const notification = document.getElementById('update-notification');
-        
-        // Show notification
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 1000);
-        
-        // Add dismiss handler
-        notification.querySelector('.dismiss-btn').addEventListener('click', () => {
-            notification.classList.remove('show');
-            localStorage.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION);
-        });
-    }
-
-    // Check for updates when app loads
-    checkForUpdates();
-
-    // Add comment button event listener
-    document.querySelector('[data-command="addComment"]').addEventListener('click', () => {
-        const selection = window.getSelection();
-        if (!selection.toString()) {
-            alert('Please select some text to comment on');
-            return;
-        }
-        
-        const commentText = prompt('Enter your comment:');
-        if (commentText) {
-            commentSystem.addComment(selection, commentText);
-        }
+function showUpdateNotification() {
+    const notification = document.getElementById('update-notification');
+    
+    // Show notification
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 1000);
+    
+    // Add dismiss handler
+    notification.querySelector('.dismiss-btn').addEventListener('click', () => {
+        notification.classList.remove('show');
+        localStorage.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION);
     });
+}
 
-    // Add history tracking
-    editor.addEventListener('input', () => {
+// Check for updates when app loads
+checkForUpdates();
+});
+
+// Add comment button event listener
+document.querySelector('[data-command="addComment"]').addEventListener('click', () => {
+    const selection = window.getSelection();
+    if (!selection.toString()) {
+        alert('Please select some text to comment on');
+        return;
+    }
+    
+    const commentText = prompt('Enter your comment:');
+    if (commentText) {
+        commentSystem.addComment(selection, commentText);
+    }
+});
+
+// Add history tracking
+editor.addEventListener('input', () => {
     const selection = window.getSelection();
     history.recordChange(editor.innerHTML, {
         start: selection.anchorOffset,
