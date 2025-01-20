@@ -126,18 +126,6 @@
             <input type="color" id="text-color-picker" class="formatting-color-picker" title="Text Color">
             <input type="color" id="highlight-color-picker" class="formatting-color-picker" title="Highlight Color">
         </div>
-
-        <div class="formatting-group">
-            <button class="formatting-btn" data-command="createTable" title="Insert Table">
-                <i class="fas fa-table"></i>
-            </button>
-            <button class="formatting-btn" data-command="insertImage" title="Insert Image">
-                <i class="fas fa-image"></i>
-            </button>
-            <button class="formatting-btn" data-command="addComment" title="Add Comment">
-                <i class="fas fa-comment"></i>
-            </button>
-        </div>
     </div>
     
     <!-- Main Editor Area -->
@@ -167,51 +155,5 @@
     }
 });
     </script>
-
-<div id="comment-sidebar" class="comment-sidebar" style="display: none;">
-    <div class="comment-header">
-        <h3>Comments</h3>
-        <button class="close-btn"><i class="fas fa-times"></i></button>
-    </div>
-    <div id="comment-list"></div>
-</div>
-
-<!-- Table Controls UI -->
-<div id="table-controls" class="table-controls" style="display: none;">
-    <div class="control-group">
-        <label>Rows: <input type="number" id="table-rows" min="1" max="20" value="2"></label>
-        <label>Cols: <input type="number" id="table-cols" min="1" max="10" value="2"></label>
-    </div>
-    <div class="button-group">
-        <button class="btn btn-primary" id="insert-table">Insert</button>
-        <button class="btn btn-secondary" id="cancel-table">Cancel</button>
-    </div>
-</div>
-
-<!-- Image Controls UI -->
-<div id="image-controls" class="image-controls" style="display: none;">
-    <div class="resize-handle top-left"></div>
-    <div class="resize-handle top-right"></div>
-    <div class="resize-handle bottom-left"></div>
-    <div class="resize-handle bottom-right"></div>
-</div>
-
-<!-- Collaborative Status UI -->
-<div id="collaboration-status" class="collaboration-status">
-    <div class="user-cursors"></div>
-    <div class="connection-status"></div>
-</div>
-
-<!-- Add before closing body tag -->
-<div id="update-notification" class="update-notification">
-    <div class="notification-content">
-        <i class="fas fa-bell"></i>
-        <span>Nova Docs has been updated!</span>
-        <a href="changelog.html" class="changelog-link">See what's new</a>
-    </div>
-    <button class="dismiss-btn">
-        <i class="fas fa-times"></i>
-    </button>
-</div>
 </body>
 </html>
