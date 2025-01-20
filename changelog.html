@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Docs - Changelog</title>
+    <link rel="icon" type="image/x-icon" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs" height="45">
+        <a href="index.html" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Editor
+        </a>
+    </header>
+
+    <main>
+        <div class="changelog-container">
+            <h1 style="margin-bottom: 32px;">Nova Docs Changelog</h1>
+            
+            <div class="changelog-entry">
+                <h2>Version 2.5 - March 2024</h2>
+                <h3>🎉 New Features</h3>
+                <ul>
+                    <li>Added image upload and cropping functionality</li>
+                    <li>New table insertion feature with customizable rows and columns</li>
+                    <li>Enhanced text formatting options with more fonts and sizes</li>
+                    <li>Improved document organization with collapsible document list</li>
+                </ul>
+
+                <h3>💪 Improvements</h3>
+                <ul>
+                    <li>Redesigned formatting toolbar for better usability</li>
+                    <li>Enhanced autosave functionality with visual feedback</li>
+                    <li>Improved mobile responsiveness</li>
+                    <li>Better handling of document exports in TXT and HTML formats</li>
+                </ul>
+
+                <h3>🐛 Bug Fixes</h3>
+                <ul>
+                    <li>Fixed issues with document list not updating properly</li>
+                    <li>Resolved formatting inconsistencies when copying/pasting content</li>
+                    <li>Fixed alignment issues in the editor on different screen sizes</li>
+                </ul>
+            </div>
+    </main>
+
+    <style>
+        .changelog-container {
+            width: 8.5in;
+            max-width: 95%;
+            margin: 32px auto;
+            padding: 96px;
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #d1dce6;
+            margin-top: 32px;
+            overflow-y: auto;
+        }
+
+        .changelog-entry {
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .changelog-entry {
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .changelog-entry:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .changelog-entry h2 {
+            color: #2c3e50;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+
+        .changelog-entry h3 {
+            color: #34495e;
+            margin: 24px 0 12px;
+            font-size: 18px;
+        }
+
+        .changelog-entry ul {
+            margin: 0;
+            padding-left: 24px;
+        }
+
+        .changelog-entry li {
+            margin: 8px 0;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .changelog-container {
+                padding: 24px;
+            }
+            
+            .editor {
+                padding: 24px !important;
+            }
+
+            .changelog-entry {
+                margin-bottom: 32px;
+                padding-bottom: 24px;
+            }
+
+            .changelog-entry h2 {
+                font-size: 20px;
+            }
+
+            .changelog-entry h3 {
+                font-size: 16px;
+            }
+        }
+    </style>
+</body>
+</html>

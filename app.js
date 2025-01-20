@@ -1,6 +1,65 @@
 // Nova Docs Editor Main Application Logic with Local Storage Document Management
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Notification System
+    class NotificationSystem {
+        static DURATION = 3000; // Default duration in milliseconds
+        static container = document.getElementById('notification-container');
+
+        static show(message, type = 'info', duration = this.DURATION) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const iconMap = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                warning: 'exclamation-triangle',
+                info: 'info-circle'
+            };
+
+            notification.innerHTML = `
+                <i class="fas fa-${iconMap[type]} notification-icon"></i>
+                <div class="notification-message">${message}</div>
+                <i class="fas fa-times notification-close"></i>
+            `;
+
+            this.container.appendChild(notification);
+
+            // Show notification with animation
+            setTimeout(() => notification.classList.add('show'), 10);
+
+            // Setup close button
+            const closeBtn = notification.querySelector('.notification-close');
+            closeBtn.addEventListener('click', () => this.close(notification));
+
+            // Auto close after duration
+            if (duration > 0) {
+                setTimeout(() => this.close(notification), duration);
+            }
+        }
+
+        static close(notification) {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }
+
+        static success(message, duration) {
+            this.show(message, 'success', duration);
+        }
+
+        static error(message, duration) {
+            this.show(message, 'error', duration);
+        }
+
+        static warning(message, duration) {
+            this.show(message, 'warning', duration);
+        }
+
+        static info(message, duration) {
+            this.show(message, 'info', duration);
+        }
+    }
+
     // Element selections with error handling
     const editor = document.getElementById('editor');
     const fontSelect = document.getElementById('font-select');
@@ -49,7 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Save a document with additional validations
         static saveDocument(name, content) {
             if (!name) {
-                throw new Error('Document name cannot be empty');
+                NotificationSystem.error('Document name cannot be empty');
+                return null;
             }
 
             try {
@@ -57,11 +117,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Check storage limit
                 if (Object.keys(documents).length >= this.MAX_DOCUMENTS) {
-                    throw new Error('Maximum number of documents reached');
+                    NotificationSystem.error('Maximum number of documents reached');
+                    return null;
                 }
 
                 // Sanitize document name
                 const sanitizedName = this.sanitizeFileName(name);
+                const isNew = !documents[sanitizedName];
 
                 documents[sanitizedName] = {
                     content: content,
@@ -70,10 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(documents));
+                NotificationSystem.success(isNew ? 'Document created successfully' : 'Document saved successfully');
                 return sanitizedName;
             } catch (error) {
-                console.error('Error saving document:', error);
-                alert(error.message);
+                NotificationSystem.error('Failed to save document: ' + error.message);
                 return null;
             }
         }
@@ -95,9 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const documents = this.getDocuments();
                 delete documents[name];
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(documents));
+                NotificationSystem.success('Document deleted successfully');
                 return true;
             } catch (error) {
-                console.error('Error deleting document:', error);
+                NotificationSystem.error('Failed to delete document: ' + error.message);
                 return false;
             }
         }
@@ -168,9 +231,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const documentName = documentNameInput.value.trim();
             if (documentName) {
                 const content = editor.innerHTML;
-                DocumentManager.saveDocument(documentName, content);
-                DocumentManager.renderDocumentList();
-                console.log('Document autosaved');
+                if (DocumentManager.saveDocument(documentName, content)) {
+                    DocumentManager.renderDocumentList();
+                    NotificationSystem.info('Document autosaved');
+                }
             }
         }, 1000);
     }
@@ -339,9 +403,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Clean up
             URL.revokeObjectURL(link.href);
+            NotificationSystem.success(`Document exported as ${format.toUpperCase()}`);
         } catch (error) {
             console.error('Export failed:', error);
-            alert('Failed to export document. Please try again.');
+            NotificationSystem.error('Failed to export document. Please try again.');
         }
     }
 
@@ -378,5 +443,172 @@ document.addEventListener('DOMContentLoaded', () => {
     window.NovaDocsEditor = {
         exportDocument,
         DocumentManager
+    };
+
+    // Image handling
+    let cropper = null;
+    const imageModal = document.getElementById('imageModal');
+    const tableModal = document.getElementById('tableModal');
+    const cropperContainer = document.getElementById('cropperContainer');
+    const cropperImage = document.getElementById('cropperImage');
+
+    // Close modal handlers
+    document.querySelectorAll('.close').forEach(closeBtn => {
+        closeBtn.onclick = function() {
+            imageModal.style.display = 'none';
+            tableModal.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+    });
+
+    // Image upload handling
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                cropperImage.src = e.target.result;
+                cropperContainer.style.display = 'block';
+                if (cropper) {
+                    cropper.destroy();
+                }
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: NaN,
+                    viewMode: 2,
+                    minContainerWidth: 200,
+                    minContainerHeight: 200,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Cropper controls
+    document.getElementById('rotateLeft').onclick = () => cropper.rotate(-90);
+    document.getElementById('rotateRight').onclick = () => cropper.rotate(90);
+    document.getElementById('cropImage').onclick = () => {
+        const croppedCanvas = cropper.getCroppedCanvas();
+        insertImage(croppedCanvas.toDataURL());
+        imageModal.style.display = 'none';
+        cropper.destroy();
+        cropper = null;
+    };
+
+    // Image URL handling
+    document.getElementById('imageUrlBtn').onclick = () => {
+        const url = prompt('Enter image URL:');
+        if (url) {
+            insertImage(url);
+            imageModal.style.display = 'none';
+        }
+    };
+
+    function insertImage(src) {
+        const img = document.createElement('div');
+        img.className = 'image-wrapper';
+        img.innerHTML = `
+            <img src="${src}" alt="Inserted image">
+            <div class="image-controls">
+                <button class="image-control-btn" onclick="this.closest('.image-wrapper').remove()">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="image-control-btn" onclick="resizeImage(this)">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        `;
+        insertAtCursor(img);
+    }
+
+    // Table handling
+    document.getElementById('insertTableBtn').onclick = () => {
+        const rows = parseInt(document.getElementById('tableRows').value);
+        const cols = parseInt(document.getElementById('tableCols').value);
+        
+        if (rows > 0 && cols > 0) {
+            insertTable(rows, cols);
+            tableModal.style.display = 'none';
+        }
+    };
+
+    function insertTable(rows, cols) {
+        const table = document.createElement('table');
+        
+        // Create header row
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        for (let i = 0; i < cols; i++) {
+            const th = document.createElement('th');
+            th.contentEditable = true;
+            th.innerHTML = `Header ${i + 1}`;
+            headerRow.appendChild(th);
+        }
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Create body rows
+        const tbody = document.createElement('tbody');
+        for (let i = 0; i < rows - 1; i++) {
+            const row = document.createElement('tr');
+            for (let j = 0; j < cols; j++) {
+                const td = document.createElement('td');
+                td.contentEditable = true;
+                td.innerHTML = `Cell ${i + 1}-${j + 1}`;
+                row.appendChild(td);
+            }
+            tbody.appendChild(row);
+        }
+        table.appendChild(tbody);
+
+        insertAtCursor(table);
+    }
+
+    function insertAtCursor(element) {
+        const selection = window.getSelection();
+        if (selection.rangeCount) {
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(element);
+            selection.collapseToEnd();
+        }
+    }
+
+    // Add command handlers for new buttons
+    const commandHandlers = {
+        // ...existing handlers...
+        'insertImage': () => {
+            imageModal.style.display = 'block';
+            document.getElementById('imageInput').value = '';
+            cropperContainer.style.display = 'none';
+        },
+        'insertTable': () => {
+            tableModal.style.display = 'block';
+        }
+    };
+
+    // Update formatting button event listeners
+    formattingButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const command = button.dataset.command;
+            if (commandHandlers[command]) {
+                commandHandlers[command]();
+            } else {
+                applyTextFormat(command);
+            }
+            editor.focus();
+        });
+    });
+
+    // Image resize function
+    window.resizeImage = function(button) {
+        const img = button.closest('.image-wrapper').querySelector('img');
+        const newWidth = prompt('Enter new width (in pixels):', img.width);
+        if (newWidth && !isNaN(newWidth)) {
+            img.style.width = `${newWidth}px`;
+            img.style.height = 'auto';
+        }
     };
 });

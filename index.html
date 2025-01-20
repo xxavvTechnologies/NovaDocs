@@ -16,8 +16,15 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 </head>
 <body>
+    <div id="update-banner" class="update-banner">
+        <span>🎉 We've updated Nova Docs with exciting new features! </span>
+        <a href="changelog.html">See what's new</a>
+        <button class="close-banner" onclick="dismissBanner()">×</button>
+    </div>
     <header>
         <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs" height="45">
         <div class="user-dropdown">
@@ -29,6 +36,9 @@
             </div>
         </div>
     </header>
+    
+    <!-- Notification Container -->
+    <div class="notification-container" id="notification-container"></div>
     
     <!-- Document Name Input -->
     <div class="document-actions">
@@ -126,8 +136,57 @@
             <input type="color" id="text-color-picker" class="formatting-color-picker" title="Text Color">
             <input type="color" id="highlight-color-picker" class="formatting-color-picker" title="Highlight Color">
         </div>
+        
+        <div class="formatting-group">
+            <button class="formatting-btn" data-command="insertImage" title="Insert Image">
+                <i class="fas fa-image"></i>
+            </button>
+            <button class="formatting-btn" data-command="insertTable" title="Insert Table">
+                <i class="fas fa-table"></i>
+            </button>
+        </div>
     </div>
     
+    <!-- Image Upload Modal -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Insert Image</h2>
+            <div class="upload-options">
+                <input type="file" id="imageInput" accept="image/*">
+                <button id="uploadImageBtn">Upload</button>
+                <button id="imageUrlBtn">Insert from URL</button>
+            </div>
+            <div id="cropperContainer" style="display: none;">
+                <img id="cropperImage" src="">
+                <div class="cropper-controls">
+                    <button id="rotateLeft">↶ Rotate Left</button>
+                    <button id="rotateRight">↷ Rotate Right</button>
+                    <button id="cropImage">Crop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Modal -->
+    <div id="tableModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Insert Table</h2>
+            <div class="table-controls">
+                <div class="input-group">
+                    <label for="tableRows">Rows:</label>
+                    <input type="number" id="tableRows" min="1" max="50" value="3">
+                </div>
+                <div class="input-group">
+                    <label for="tableCols">Columns:</label>
+                    <input type="number" id="tableCols" min="1" max="20" value="3">
+                </div>
+                <button id="insertTableBtn">Insert Table</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Editor Area -->
     <main>
         <div id="editor" contenteditable="true" class="editor">
@@ -154,6 +213,21 @@
         toggleButton.innerHTML = '<i class="fas fa-chevron-down"></i> Show Documents';
     }
 });
+
+        function dismissBanner() {
+            const banner = document.getElementById('update-banner');
+            banner.style.display = 'none';
+            localStorage.setItem('updbanner2.5', 'true');
+        }
+
+        // Check if banner was previously dismissed
+        window.addEventListener('DOMContentLoaded', () => {
+            const isDismissed = localStorage.getItem('updbanner2.5');
+            if (isDismissed === 'true') {
+                const banner = document.getElementById('update-banner');
+                banner.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>

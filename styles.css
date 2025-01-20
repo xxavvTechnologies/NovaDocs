@@ -472,3 +472,248 @@ button:disabled:hover {
     width: 100%;
     text-align: left;
 }
+
+/* Notification Styles */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.notification {
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+    margin-bottom: 10px;
+    padding: 15px 20px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 300px;
+    max-width: 450px;
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification.success {
+    border-left: 4px solid #2ecc71;
+}
+
+.notification.error {
+    border-left: 4px solid #e74c3c;
+}
+
+.notification.info {
+    border-left: 4px solid #3498db;
+}
+
+.notification.warning {
+    border-left: 4px solid #f1c40f;
+}
+
+.notification-icon {
+    font-size: 18px;
+}
+
+.notification.success .notification-icon {
+    color: #2ecc71;
+}
+
+.notification.error .notification-icon {
+    color: #e74c3c;
+}
+
+.notification.info .notification-icon {
+    color: #3498db;
+}
+
+.notification.warning .notification-icon {
+    color: #f1c40f;
+}
+
+.notification-message {
+    flex-grow: 1;
+    font-size: 14px;
+    color: #2c3e50;
+}
+
+.notification-close {
+    color: #95a5a6;
+    cursor: pointer;
+    font-size: 16px;
+    transition: color 0.2s ease;
+}
+
+.notification-close:hover {
+    color: #7f8c8d;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+/* Image Cropper Styles */
+#cropperContainer {
+    max-width: 100%;
+    margin: 20px 0;
+}
+
+#cropperImage {
+    max-width: 100%;
+    display: block;
+}
+
+.cropper-controls {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Table Styles */
+.editor table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.editor table td, .editor table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+    min-width: 50px;
+}
+
+.editor table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.table-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-group input {
+    width: 60px;
+    padding: 5px;
+}
+
+/* Responsive Image Styles */
+.editor img {
+    max-width: 100%;
+    height: auto;
+    margin: 10px 0;
+}
+
+.image-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.image-controls {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: none;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    padding: 5px;
+}
+
+.image-wrapper:hover .image-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.image-control-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 2px 5px;
+    color: #333;
+}
+
+.image-control-btn:hover {
+    color: #000;
+}
+
+/* Update Banner Styles */
+.update-banner {
+    background: #ebfbee;
+    border-bottom: 1px solid #34d399;
+    color: #065f46;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.update-banner a {
+    color: #047857;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.update-banner a:hover {
+    color: #065f46;
+}
+
+.update-banner .close-banner {
+    background: transparent;
+    border: none;
+    color: #065f46;
+    cursor: pointer;
+    padding: 4px 8px;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+}
+
+.update-banner .close-banner:hover {
+    color: #047857;
+}
