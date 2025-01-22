@@ -3,138 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latest Update | Nova Docs</title>
-    <link rel="icon" type="image/x-icon" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+    <title>Changelog | Nova Docs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 </head>
 <body>
-    <header>
-        <div class="logo-container">
-            <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs" height="45">
-            <div class="logo-submenu">
-                <h3>Nova Docs</h3>
-                <div class="app-info">
-                    <p><span class="label">Version:</span> <span>2.5.2</span></p>
-                    <p><span class="label">Developer:</span> <span>xxavvTechnologies</span></p>
-                    <p><span class="label">Last Updated:</span> <span>January 20, 2025</span></p>
+    <div class="container">
+        <div class="top-header">
+            <div class="logo-container">
+                <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs">
+                <div class="logo-submenu">
+                    <h3>Nova Docs</h3>
+                    <div class="app-info">
+                        <p><span class="label">Version:</span> <span>3.0.0</span></p>
+                        <p><span class="label">Developer:</span> <span>xxavvTechnologies</span></p>
+                        <p><span class="label">Last Updated:</span> <span>January 21, 2025</span></p>
+                    </div>
+                    <a href="https://tech.xxavvgroup.com/nova/docs" target="_blank">
+                        Legal & Technical Information →
+                    </a>
                 </div>
-                <a href="https://tech.xxavvgroup.com/nova/docs" target="_blank">
-                    Legal & Technical Information →
-                </a>
+            </div>
+            <a href="index.html" class="user-button">
+                <i class="fas fa-arrow-left"></i>
+                Back to Editor
+            </a>
+        </div>
+
+        <div class="changelog-wrapper">
+            <div class="changelog-header">
+                <span class="version-pill">Version 3.0.0</span>
+                <h1>What's New in Nova Docs</h1>
+                <p class="release-date">January 21, 2025</p>
+            </div>
+
+            <div class="changelog-sections">
+                <section class="update-section new-features">
+                    <div class="section-header">
+                        <span class="section-icon">✨</span>
+                        <h2>New Features</h2>
+                    </div>
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <i class="fas fa-crop"></i>
+                            <div class="feature-content">
+                                <h3>Image Upload & Cropping</h3>
+                                <p>Added image upload and cropping functionality</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-table"></i>
+                            <div class="feature-content">
+                                <h3>Advanced Tables</h3>
+                                <p>New table insertion feature with customizable rows and columns</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-font"></i>
+                            <div class="feature-content">
+                                <h3>Enhanced Text Formatting</h3>
+                                <p>Enhanced text formatting options with more fonts and sizes</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-folder-tree"></i>
+                            <div class="feature-content">
+                                <h3>Better Organization</h3>
+                                <p>Improved document organization with collapsible document list</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="update-section improvements">
+                    <div class="section-header">
+                        <span class="section-icon">💪</span>
+                        <h2>Improvements</h2>
+                    </div>
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <i class="fas fa-sliders"></i>
+                            <div class="feature-content">
+                                <h3>Better Toolbar</h3>
+                                <p>Redesigned formatting toolbar for better usability</p>
+                            </div>
+                        </div>
+                        <!-- Add remaining improvements similarly -->
+                    </div>
+                </section>
+
+                <section class="update-section fixes">
+                    <div class="section-header">
+                        <span class="section-icon">🐛</span>
+                        <h2>Bug Fixes</h2>
+                    </div>
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-content">
+                                <h3>Document List Updates</h3>
+                                <p>Fixed issues with document list not updating properly</p>
+                            </div>
+                        </div>
+                        <!-- Add remaining bug fixes similarly -->
+                    </div>
+                </section>
             </div>
         </div>
-        <a href="index.html" class="btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Editor
-        </a>
-    </header>
-
-    <main>
-        <div class="changelog-container">
-            <h1 style="margin-bottom: 32px;">Nova Docs <i>Changelog</i></h1>
-            
-            <div class="changelog-entry">
-                <h2>Version 2.5 - January 19, 2025</h2>
-                <h3>🎉 New Features</h3>
-                <ul>
-                    <li>Added image upload and cropping functionality</li>
-                    <li>New table insertion feature with customizable rows and columns</li>
-                    <li>Enhanced text formatting options with more fonts and sizes</li>
-                    <li>Improved document organization with collapsible document list</li>
-                </ul>
-
-                <h3>💪 Improvements</h3>
-                <ul>
-                    <li>Redesigned formatting toolbar for better usability</li>
-                    <li>Enhanced autosave functionality with visual feedback</li>
-                    <li>Improved mobile responsiveness</li>
-                    <li>Better handling of document exports in TXT and HTML formats</li>
-                </ul>
-
-                <h3>🐛 Bug Fixes</h3>
-                <ul>
-                    <li>Fixed issues with document list not updating properly</li>
-                    <li>Resolved formatting inconsistencies when copying/pasting content</li>
-                    <li>Fixed alignment issues in the editor on different screen sizes</li>
-                </ul>
-            </div>
-    </main>
+    </div>
 
     <style>
-        .changelog-container {
-            width: 8.5in;
-            max-width: 95%;
-            margin: 32px auto;
-            padding: 96px;
-            background: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border: 1px solid #d1dce6;
-            margin-top: 32px;
-            overflow-y: auto;
+        .changelog-wrapper {
+            max-width: 900px;
+            margin: 80px auto;
+            padding: 0 20px;
         }
 
-        .changelog-entry {
-            margin-bottom: 48px;
-            padding-bottom: 32px;
-            border-bottom: 1px solid #e0e0e0;
+        .changelog-header {
+            text-align: center;
+            margin-bottom: 60px;
         }
 
-        .changelog-entry {
-            margin-bottom: 48px;
-            padding-bottom: 32px;
-            border-bottom: 1px solid #e0e0e0;
+        .version-pill {
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 20px;
         }
 
-        .changelog-entry:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
+        .changelog-header h1 {
+            font-size: 2.5rem;
+            margin: 20px 0;
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .changelog-entry h2 {
-            color: #2c3e50;
-            margin-bottom: 16px;
-            font-size: 24px;
+        .release-date {
+            color: var(--secondary);
+            font-size: 1.1rem;
         }
 
-        .changelog-entry h3 {
-            color: #34495e;
-            margin: 24px 0 12px;
-            font-size: 18px;
+        .update-section {
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
         }
 
-        .changelog-entry ul {
+        .update-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .section-icon {
+            font-size: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
             margin: 0;
-            padding-left: 24px;
         }
 
-        .changelog-entry li {
-            margin: 8px 0;
-            color: #4a5568;
-            line-height: 1.6;
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-item {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 12px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-item i {
+            font-size: 1.5rem;
+            color: var(--primary);
+            padding: 12px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 8px;
+        }
+
+        .feature-content h3 {
+            font-size: 1.1rem;
+            margin: 0 0 8px 0;
+        }
+
+        .feature-content p {
+            color: var(--secondary);
+            margin: 0;
+            line-height: 1.5;
         }
 
         @media (max-width: 768px) {
-            .changelog-container {
-                padding: 24px;
-            }
-            
-            .editor {
-                padding: 24px !important;
+            .changelog-wrapper {
+                margin: 40px auto;
             }
 
-            .changelog-entry {
-                margin-bottom: 32px;
-                padding-bottom: 24px;
+            .changelog-header h1 {
+                font-size: 2rem;
             }
 
-            .changelog-entry h2 {
-                font-size: 20px;
+            .feature-list {
+                grid-template-columns: 1fr;
             }
 
-            .changelog-entry h3 {
-                font-size: 16px;
+            .feature-item {
+                padding: 20px;
             }
         }
     </style>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        document.querySelectorAll('.update-section').forEach(section => {
+            ScrollTrigger.create({
+                trigger: section,
+                start: 'top 80%',
+                onEnter: () => section.classList.add('visible'),
+                once: true
+            });
+        });
+    </script>
 </body>
 </html>
