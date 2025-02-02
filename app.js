@@ -1,6 +1,278 @@
 let currentDocId = null;
+// ...existing code...
+
+function toggleSubmenu(menuId) {
+    // Close all other submenus first
+    document.querySelectorAll('.submenu').forEach(menu => {
+        if (menu.id !== menuId) {
+            menu.classList.remove('active');
+        }
+    });
+
+    // Toggle the clicked submenu
+    const menu = document.getElementById(menuId);
+    menu.classList.toggle('active');
+
+    // Update active states of toggle buttons
+    if (menuId === 'tools-menu') {
+        updateToolsMenuState();
+    }
+}
+
+function updateToolsMenuState() {
+    // Update button states based on active features
+    const markdownBtn = document.querySelector('#tools-menu button[onclick*="toggleMarkdownMode"]');
+    if (document.body.classList.contains('markdown-mode')) {
+        markdownBtn.classList.add('active');
+    } else {
+        markdownBtn.classList.remove('active');
+    }
+
+    // Update other tool states as needed
+    const commentBtn = document.querySelector('#tools-menu button[onclick*="toggleComments"]');
+    if (document.getElementById('commentsPanel').classList.contains('active')) {
+        commentBtn.classList.add('active');
+    } else {
+        commentBtn.classList.remove('active');
+    }
+    
+    // Similar updates for other tools...
+}
+
+// Close submenus when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.submenu') && !e.target.closest('button[onclick*="toggleSubmenu"]')) {
+        document.querySelectorAll('.submenu').forEach(menu => {
+            menu.classList.remove('active');
+        });
+    }
+});
+
+// ...existing code...
+// Keyboard shortcuts mapping (Google Docs compatible)
+const SHORTCUTS = {
+    'Ctrl/⌘ + B': 'Bold',
+    'Ctrl/⌘ + I': 'Italic',
+    'Ctrl/⌘ + U': 'Underline',
+    'Ctrl/⌘ + K': 'Insert link',
+    'Ctrl/⌘ + Alt + H': 'Clear formatting',
+    'Ctrl/⌘ + Alt + M': 'Add comment',
+    'Ctrl/⌘ + Alt + N': 'Clear comments',
+    'Ctrl/⌘ + Alt + T': 'Insert table',
+    'Ctrl/⌘ + Shift + V': 'Paste without formatting',
+    'Alt + Shift + 5': 'Strikethrough',
+    'Ctrl/⌘ + Shift + C': 'Word count',
+    'Ctrl/⌘ + \\': 'Clear formatting',
+    'Ctrl/⌘ + Shift + S': 'Save revision',
+    'Ctrl/⌘ + Alt + Shift + H': 'Show revision history'
+};
+
+// Initialize comment system
+let comments = [];
+let suggestionMode = false;
+
+function initCommentSystem() {
+    document.execCommand('defaultParagraphSeparator', false, 'p');
+    
+    document.getElementById('editor').addEventListener('mouseup', () => {
+        if (suggestionMode) {
+            const selection = window.getSelection();
+            if (!selection.isCollapsed) {
+                addSuggestion(selection);
+            }
+        }
+    });
+}
+
+function addSuggestion(selection) {
+    const range = selection.getRangeAt(0);
+    const span = document.createElement('span');
+    span.className = 'suggestion';
+    span.dataset.author = 'Current User';
+    span.dataset.time = new Date().toISOString();
+    range.surroundContents(span);
+}
+
+function toggleSuggestionMode() {
+    suggestionMode = !suggestionMode;
+    const btn = document.getElementById('suggestionModeBtn');
+    btn.classList.toggle('active');
+    notifications.info(
+        'Suggestion Mode', 
+        suggestionMode ? 'Suggestion mode enabled' : 'Suggestion mode disabled'
+    );
+}
+
+// Revision history system
+let revisions = [];
+
+function saveRevision() {
+    const content = document.getElementById('editor').innerHTML;
+    revisions.push({
+        content,
+        timestamp: new Date().toISOString(),
+        author: 'Current User'
+    });
+    updateRevisionsList();
+}
+
+function updateRevisionsList() {
+    const list = document.getElementById('revisionsList');
+    list.innerHTML = revisions.map((rev, i) => `
+        <div class="revision-item" onclick="restoreRevision(${i})">
+            <div class="revision-header">
+                <span class="revision-author">${rev.author}</span>
+                <span class="revision-time">${new Date(rev.timestamp).toLocaleString()}</span>
+            </div>
+            <div class="revision-changes">
+                Version ${revisions.length - i}
+            </div>
+        </div>
+    `).join('');
+}
+
+function restoreRevision(index) {
+    if (confirm('Restore this version? Current changes will be saved as a revision.')) {
+        saveRevision(); // Save current state
+        document.getElementById('editor').innerHTML = revisions[index].content;
+        notifications.info('Revision Restored', 'Document restored to previous version');
+    }
+}
+
+// Document outline system
+function updateOutline() {
+    const editor = document.getElementById('editor');
+    const headers = editor.querySelectorAll('h1, h2, h3');
+    const outlineList = document.getElementById('outlineList');
+    
+    outlineList.innerHTML = Array.from(headers).map(header => `
+        <div class="outline-item outline-${header.tagName.toLowerCase()}" 
+             onclick="scrollToHeader('${header.id || Math.random()}')">
+            ${header.textContent}
+        </div>
+    `).join('');
+}
+
+function scrollToHeader(id) {
+    const header = document.getElementById(id) || 
+                  document.querySelector(`[data-id="${id}"]`);
+    if (header) {
+        header.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Reading stats system
+function updateReadingStats() {
+    const text = document.getElementById('editor').textContent;
+    const wordCount = text.trim().split(/\s+/).length;
+    const readingTime = Math.ceil(wordCount / 200); // Average reading speed
+    
+    document.getElementById('wordCountDetail').textContent = `${wordCount} words`;
+    document.getElementById('readingTime').textContent = `${readingTime} min read`;
+}
+
+// Panel toggles
+function toggleComments() {
+    document.getElementById('commentsPanel').classList.toggle('active');
+}
+
+function toggleHistory() {
+    document.getElementById('historyPanel').classList.toggle('active');
+}
+
+function toggleOutline() {
+    document.getElementById('outlinePanel').classList.toggle('active');
+    updateOutline();
+}
+
+function toggleReadingStats() {
+    document.getElementById('readingStats').classList.toggle('active');
+    updateReadingStats();
+}
+
+// Keyboard shortcuts dialog
+function showKeyboardShortcuts() {
+    const dialog = document.getElementById('shortcutsDialog');
+    const list = document.getElementById('shortcutsList');
+    
+    list.innerHTML = Object.entries(SHORTCUTS).map(([key, action]) => `
+        <div class="shortcut-item">
+            <span class="shortcut-action">${action}</span>
+            <span class="shortcut-key">${key}</span>
+        </div>
+    `).join('');
+    
+    dialog.style.display = 'block';
+}
+
+function closeKeyboardShortcuts() {
+    document.getElementById('shortcutsDialog').style.display = 'none';
+}
+
+// Initialize new features
+document.addEventListener('DOMContentLoaded', () => {
+    initCommentSystem();
+    
+    // Auto-save revision every 5 minutes
+    setInterval(saveRevision, 5 * 60 * 1000);
+    
+    // Update outline and reading stats when content changes
+    const editor = document.getElementById('editor');
+    editor.addEventListener('input', () => {
+        updateOutline();
+        updateReadingStats();
+    });
+    
+    // Initialize keyboard shortcuts
+    document.addEventListener('keydown', handleShortcuts);
+});
+
+// Update the DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('bannerDismissed4.0') === 'true') {
+        document.getElementById('update-banner').style.display = 'none';
+        document.body.classList.remove('has-banner');
+    }
+
+    const lastOpenedId = localStorage.getItem('lastOpenedDoc');
+    if (lastOpenedId) {
+        loadDocument(lastOpenedId);
+    } else {
+        createNewDocument();
+    }
+
+    const savedMarkdownMode = localStorage.getItem('markdownMode') === 'true';
+    if (savedMarkdownMode) {
+        toggleMarkdownMode();
+    }
+
+    updateToolbarState();
+});
+
+// Simplify the updateToolbarState function
+function updateToolbarState() {
+    // Only update button states based on current formatting
+    const editor = document.getElementById('editor');
+    
+    // Update formatting buttons
+    document.querySelector('button[title="Bold"]').classList.toggle('active', document.queryCommandState('bold'));
+    document.querySelector('button[title="Italic"]').classList.toggle('active', document.queryCommandState('italic'));
+    document.querySelector('button[title="Underline"]').classList.toggle('active', document.queryCommandState('underline'));
+    
+    // Update alignment buttons
+    document.querySelector('button[title="Align Left"]').classList.toggle('active', document.queryCommandState('justifyLeft'));
+    document.querySelector('button[title="Align Center"]').classList.toggle('active', document.queryCommandState('justifyCenter'));
+    document.querySelector('button[title="Align Right"]').classList.toggle('active', document.queryCommandState('justifyRight'));
+
+    // Disable formatting controls in Markdown mode
+    const formattingControls = document.querySelectorAll('.toolbar button:not([title="Document"]), .toolbar select');
+    formattingControls.forEach(control => {
+        control.disabled = isMarkdownMode;
+    });
+}
 let debounceTimer;
 let isMarkdownMode = false;
+let lastHtmlContent = ''; // Add this at the top with other state variables
 const turndownService = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',
@@ -19,7 +291,7 @@ marked.setOptions({
 function dismissBanner() {
     document.getElementById('update-banner').style.display = 'none';
     document.body.classList.remove('has-banner');
-    localStorage.setItem('bannerDismissed', 'true');
+    localStorage.setItem('bannerDismissed4.0', 'true');
 }
 
 function updateDocumentCount() {
@@ -37,22 +309,48 @@ function applyFont(fontName) {
         'Roboto Mono', 'Courier New'
     ];
 
-    if (validFonts.includes(fontName)) {
-        // First apply the execCommand for backward compatibility
-        formatDoc('fontName', fontName);
-        
-        // Then force the font-family style directly
-        editor.style.fontFamily = getFontWithFallback(fontName);
-        
-        // Also apply to any selected text if there's a selection
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            const span = document.createElement('span');
-            span.style.fontFamily = getFontWithFallback(fontName);
-            range.surroundContents(span);
-        }
+    if (!validFonts.includes(fontName)) return;
+
+    const fontFamily = getFontWithFallback(fontName);
+    const selection = window.getSelection();
+
+    if (!selection.rangeCount) {
+        // No selection - apply to entire editor
+        editor.style.fontFamily = fontFamily;
+        return;
     }
+
+    const range = selection.getRangeAt(0);
+    if (selection.isCollapsed) {
+        // Cursor position only - apply to entire editor
+        editor.style.fontFamily = fontFamily;
+        return;
+    }
+
+    // Apply to selection
+    document.execCommand('styleWithCSS', false, true);
+    const span = document.createElement('span');
+    span.style.fontFamily = fontFamily;
+    
+    // Save the range
+    const savedRange = range.cloneRange();
+    
+    try {
+        range.surroundContents(span);
+    } catch (e) {
+        // If surroundContents fails, use a different approach
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+    }
+    
+    // Restore selection
+    selection.removeAllRanges();
+    selection.addRange(savedRange);
+
+    // Cleanup any nested or redundant spans
+    editor.normalize();
+    mergeAdjacentSpans(editor);
 }
 
 function getFontWithFallback(fontName) {
@@ -186,7 +484,7 @@ function updateDocStatus(status) {
 // Initialize editor
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize banner state
-    if (localStorage.getItem('bannerDismissed') === 'true') {
+    if (localStorage.getItem('bannerDismissed4.0') === 'true') {
         document.getElementById('update-banner').style.display = 'none';
         document.body.classList.remove('has-banner');
     }
@@ -203,6 +501,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (savedMarkdownMode) {
         toggleMarkdownMode();
     }
+
+    initializeSelectionTracking();
+    updateToolbarState(); // Initial state update
+
+    // Add cursor preservation handler
+    document.addEventListener('mousedown', preserveEditorFocus);
+    
+    // Prevent toolbar buttons from stealing focus
+    document.querySelectorAll('.toolbar button, .toolbar select').forEach(element => {
+        element.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+        });
+    });
 });
 
 function createNewDocument() {
@@ -296,23 +607,15 @@ function loadDocument(docId) {
         if (doc) {
             currentDocId = docId;
             
-            // Restore Markdown mode if it was saved with the document
             isMarkdownMode = doc.isMarkdown || false;
+            lastHtmlContent = doc.lastHtmlContent || '';
+            
             const editor = document.getElementById('editor');
             
-            // Load the appropriate content format
             if (isMarkdownMode) {
                 editor.innerText = doc.originalContent || turndownService.turndown(doc.content);
                 document.body.classList.add('markdown-mode');
                 document.getElementById('markdownToggle').classList.add('active');
-                
-                setTimeout(() => {
-                    notifications.info(
-                        'Markdown Mode Active',
-                        'This document was saved in Markdown mode. Press the Markdown button or Ctrl/Cmd + M to switch modes.',
-                        5000
-                    );
-                }, 1000);
             } else {
                 editor.innerHTML = doc.content;
                 document.body.classList.remove('markdown-mode');
@@ -323,7 +626,7 @@ function loadDocument(docId) {
             if (doc.font) {
                 const fontSelect = document.querySelector('select[title="Font"]');
                 fontSelect.value = doc.font;
-                document.getElementById('editor').style.fontFamily = getFontWithFallback(doc.font);
+                editor.style.fontFamily = doc.fontFamily || getFontWithFallback(doc.font);
             }
             
             localStorage.setItem('lastOpenedDoc', docId);
@@ -485,6 +788,10 @@ function toggleSubmenu(menuId) {
     const menu = document.getElementById(menuId);
     const allSubmenus = document.querySelectorAll('.submenu');
     
+    // Store current selection
+    const selection = window.getSelection();
+    const range = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+    
     // Close other submenus
     allSubmenus.forEach(submenu => {
         if (submenu.id !== menuId) {
@@ -494,6 +801,15 @@ function toggleSubmenu(menuId) {
     
     // Toggle current submenu
     menu.classList.toggle('active');
+    
+    // Restore selection
+    if (range) {
+        setTimeout(() => {
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.getElementById('editor').focus();
+        }, 0);
+    }
 }
 
 // Close submenus when clicking outside
@@ -650,18 +966,26 @@ document.getElementById('editor').addEventListener('input', function() {
 
 // Update font change handler
 document.querySelector('select[title="Font"]').addEventListener('change', function() {
-    applyFont(this.value);
+    const fontName = this.value;
+    applyFont(fontName);
+    
+    // Save the font selection
     const docs = getAllDocuments();
     const doc = docs[currentDocId];
     if (doc) {
-        doc.font = this.value;
+        doc.font = fontName;
+        doc.fontFamily = getFontWithFallback(fontName);
         saveDocument(currentDocId, doc);
     }
+
+    // Update toolbar state
+    updateToolbarState();
 });
 
 // Format document function
 function formatDoc(command, value = null) {
     document.execCommand(command, false, value);
+    updateToolbarState();
 }
 
 // Prevent default keyboard shortcuts and implement custom ones
@@ -739,103 +1063,180 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Add these new functions
+// Replace existing image handling functions with these improved versions
 function processImage(file) {
     return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) {
+            notifications.error('Invalid File', 'Please select an image file.');
+            return reject('Invalid file type');
+        }
+
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            notifications.error('File Too Large', 'Image must be less than 5MB.');
+            return reject('File too large');
+        }
+
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                showImageEditor(canvas, img.width, img.height);
-            };
-            img.src = e.target.result;
+        reader.onload = (e) => insertImageDirectly(e.target.result);
+        reader.onerror = () => {
+            notifications.error('Upload Failed', 'Failed to load image.');
+            reject('Upload failed');
         };
-        reader.onerror = reject;
         reader.readAsDataURL(file);
     });
 }
 
-function showImageEditor(canvas, width, height) {
-    const dialog = document.getElementById('imageEditorDialog');
-    const editor = document.getElementById('imageEditor');
-    editor.innerHTML = ''; // Clear previous content
-    editor.appendChild(canvas);
+function insertImageDirectly(dataUrl) {
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.classList.add('editor-image');
+    img.style.maxWidth = '100%';
+    img.style.cursor = 'pointer';
     
-    // Set initial crop area
-    currentCrop = {
-        x: 0,
-        y: 0,
-        width: width,
-        height: height
-    };
-    
-    dialog.classList.add('active');
-    initializeCropper(canvas);
+    // Add resize handles
+    img.addEventListener('click', (e) => {
+        // Remove selected class from other images
+        document.querySelectorAll('.editor-image.selected').forEach(img => 
+            img.classList.remove('selected'));
+        img.classList.add('selected');
+        showImageControls(img);
+    });
+
+    // Insert the image at cursor position or at the end
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.insertNode(img);
+        range.collapse(false);
+    } else {
+        document.getElementById('editor').appendChild(img);
+    }
+
+    // Show image controls
+    showImageControls(img);
 }
 
-let cropper = null;
+// Add new functions for image manipulation
+function showImageControls(img) {
+    // Remove any existing controls
+    removeImageControls();
 
-function initializeCropper(canvas) {
-    if (cropper) {
-        cropper.destroy();
-    }
+    const controls = document.createElement('div');
+    controls.className = 'image-controls';
+    controls.innerHTML = `
+        <button onclick="resizeImage(this.parentElement.targetImage, 0.9)" title="Decrease Size">
+            <i class="fas fa-search-minus"></i>
+        </button>
+        <button onclick="resizeImage(this.parentElement.targetImage, 1.1)" title="Increase Size">
+            <i class="fas fa-search-plus"></i>
+        </button>
+        <button onclick="resetImageSize(this.parentElement.targetImage)" title="Reset Size">
+            <i class="fas fa-undo"></i>
+        </button>
+        <button onclick="alignImage(this.parentElement.targetImage, 'left')" title="Align Left">
+            <i class="fas fa-align-left"></i>
+        </button>
+        <button onclick="alignImage(this.parentElement.targetImage, 'center')" title="Align Center">
+            <i class="fas fa-align-center"></i>
+        </button>
+        <button onclick="alignImage(this.parentElement.targetImage, 'right')" title="Align Right">
+            <i class="fas fa-align-right"></i>
+        </button>
+        <button onclick="removeImage(this.parentElement.targetImage)" title="Remove Image">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
     
-    cropper = new Cropper(canvas, {
-        aspectRatio: NaN,
-        viewMode: 1,
-        autoCropArea: 1,
-        cropBoxResizable: true,
-        cropBoxMovable: true,
-        dragMode: 'move',
-        guides: true,
-        ready: function() {
-            // Enable buttons when cropper is ready
-            document.querySelectorAll('.image-edit-btn').forEach(btn => btn.disabled = false);
+    controls.targetImage = img;
+    controls.style.position = 'fixed';
+    
+    // Position controls above the image
+    const rect = img.getBoundingClientRect();
+    controls.style.top = `${rect.top - 40}px`;
+    controls.style.left = `${rect.left}px`;
+    
+    document.body.appendChild(controls);
+
+    // Update controls position on scroll
+    const scrollHandler = () => {
+        const newRect = img.getBoundingClientRect();
+        controls.style.top = `${newRect.top - 40}px`;
+        controls.style.left = `${newRect.left}px`;
+    };
+    
+    window.addEventListener('scroll', scrollHandler);
+    
+    // Remove controls when clicking outside
+    document.addEventListener('click', function closeControls(e) {
+        if (!controls.contains(e.target) && e.target !== img) {
+            removeImageControls();
+            document.removeEventListener('click', closeControls);
+            window.removeEventListener('scroll', scrollHandler);
         }
     });
 }
 
-function applyImageChanges() {
-    if (!cropper) return;
-    
-    const canvas = cropper.getCroppedCanvas();
-    if (!canvas) return;
-    
-    const maxWidth = 800; // Maximum width for inserted images
-    const scaleFactor = maxWidth / canvas.width;
-    
-    if (scaleFactor < 1) {
-        const scaledCanvas = document.createElement('canvas');
-        scaledCanvas.width = canvas.width * scaleFactor;
-        scaledCanvas.height = canvas.height * scaleFactor;
-        const ctx = scaledCanvas.getContext('2d');
-        ctx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-        canvas = scaledCanvas;
-    }
-    
-    insertImageToEditor(canvas.toDataURL());
-    closeImageEditor();
+function removeImageControls() {
+    document.querySelectorAll('.image-controls').forEach(ctrl => ctrl.remove());
+    document.querySelectorAll('.editor-image.selected').forEach(img => 
+        img.classList.remove('selected'));
 }
 
-function insertImageToEditor(dataUrl) {
-    const img = `<img src="${dataUrl}" alt="Inserted image" style="max-width:100%;">`;
-    formatDoc('insertHTML', img);
-    updateWordCount();
+function resizeImage(img, factor) {
+    const currentWidth = parseInt(img.style.width) || img.clientWidth;
+    const newWidth = Math.min(Math.max(currentWidth * factor, 50), img.naturalWidth);
+    img.style.width = `${newWidth}px`;
+    updateImageControls(img);
 }
 
-function closeImageEditor() {
-    const dialog = document.getElementById('imageEditorDialog');
-    dialog.classList.remove('active');
-    if (cropper) {
-        cropper.destroy();
-        cropper = null;
+function resetImageSize(img) {
+    img.style.width = '';
+    img.style.maxWidth = '100%';
+    updateImageControls(img);
+}
+
+function alignImage(img, alignment) {
+    img.style.display = 'block';
+    switch (alignment) {
+        case 'left':
+            img.style.marginLeft = '0';
+            img.style.marginRight = 'auto';
+            break;
+        case 'center':
+            img.style.marginLeft = 'auto';
+            img.style.marginRight = 'auto';
+            break;
+        case 'right':
+            img.style.marginLeft = 'auto';
+            img.style.marginRight = '0';
+            break;
+    }
+    updateImageControls(img);
+}
+
+function removeImage(img) {
+    if (confirm('Are you sure you want to remove this image?')) {
+        removeImageControls();
+        img.remove();
     }
 }
+
+function updateImageControls(img) {
+    const controls = document.querySelector('.image-controls');
+    if (controls && controls.targetImage === img) {
+        const rect = img.getBoundingClientRect();
+        controls.style.top = `${rect.top - 40}px`;
+        controls.style.left = `${rect.left}px`;
+    }
+}
+
+// Update event handler to close image controls when clicking editor
+document.getElementById('editor').addEventListener('click', function(e) {
+    if (e.target === this) {
+        removeImageControls();
+    }
+});
 
 // Add these new functions for link handling
 function toggleLinkDialog() {
@@ -875,46 +1276,143 @@ function getSelectedLink() {
 function insertLink() {
     const url = document.getElementById('linkUrl').value;
     const text = document.getElementById('linkText').value || url;
+    const enablePreview = document.getElementById('enableRichPreview').checked;
 
-    if (!url) return;
+    if (!url.match(/^https?:\/\//i)) {
+        notifications.warning('Invalid URL', 'URL must start with http:// or https://');
+        return;
+    }
 
     try {
-        // Get current selection
         const selection = window.getSelection();
         const range = selection.getRangeAt(0);
         const existingLink = getSelectedLink();
 
-        // If there's an existing link, update it
         if (existingLink) {
             existingLink.href = url;
             existingLink.textContent = text;
+            existingLink.setAttribute('data-preview', enablePreview);
         } else {
-            // Create new link
-            const linkElement = document.createElement('a');
-            linkElement.href = url;
-            linkElement.textContent = text;
-            linkElement.target = '_blank'; // Open in new tab
-            linkElement.rel = 'noopener noreferrer'; // Security best practice
+            const link = document.createElement('a');
+            link.href = url;
+            link.textContent = text;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.setAttribute('data-preview', enablePreview);
             
-            // Replace selection with link
             range.deleteContents();
-            range.insertNode(linkElement);
+            range.insertNode(link);
+
+            // Add space after link
+            const space = document.createTextNode(' ');
+            link.parentNode.insertBefore(space, link.nextSibling);
             
-            // Move cursor after link
+            // Move cursor after space
             const newRange = document.createRange();
-            newRange.setStartAfter(linkElement);
+            newRange.setStartAfter(space);
             selection.removeAllRanges();
             selection.addRange(newRange);
+
+            // If rich preview is enabled, fetch and insert preview
+            if (enablePreview) {
+                fetchLinkPreview(url).then(preview => {
+                    if (preview) {
+                        insertRichPreview(link, preview);
+                    }
+                });
+            }
         }
 
         // Hide dialog
-        toggleLinkDialog();
+        document.getElementById('linkDialog').style.display = 'none';
         
         // Update content
         document.getElementById('editor').dispatchEvent(new Event('input'));
+        
+        notifications.success('Link Inserted', 'Link has been added successfully.');
     } catch (error) {
         console.error('Link insertion error:', error);
         notifications.error('Link Error', 'Failed to insert link. Please try again.');
+    }
+}
+
+// Add function to insert rich preview
+function insertRichPreview(link, preview) {
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'rich-link-preview';
+    previewDiv.innerHTML = `
+        ${preview.image ? `<img src="${preview.image.url}" alt="${preview.title || ''}" loading="lazy">` : ''}
+        <div class="rich-link-content">
+            <div class="rich-link-title">${preview.title || ''}</div>
+            <div class="rich-link-description">${preview.description || ''}</div>
+            <div class="rich-link-domain">${new URL(preview.url).hostname}</div>
+        </div>
+    `;
+    
+    // Insert preview after the link
+    link.parentNode.insertBefore(previewDiv, link.nextSibling);
+    
+    // Make the preview clickable
+    previewDiv.onclick = () => window.open(link.href, '_blank');
+}
+
+// Add event delegation for handling link clicks in the editor
+document.getElementById('editor').addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (link && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        const rect = link.getBoundingClientRect();
+        
+        const menu = document.createElement('div');
+        menu.className = 'link-context-menu';
+        menu.style.position = 'fixed';
+        menu.style.left = `${rect.left}px`;
+        menu.style.top = `${rect.bottom + 5}px`;
+        menu.innerHTML = `
+            <button onclick="window.open('${link.href}', '_blank')">
+                <i class="fas fa-external-link-alt"></i> Open in New Tab
+            </button>
+            <button onclick="copyToClipboard('${link.href}')">
+                <i class="fas fa-copy"></i> Copy URL
+            </button>
+            <button onclick="editLink(this.closest('.link-context-menu').previousElementSibling)">
+                <i class="fas fa-edit"></i> Edit Link
+            </button>
+        `;
+        
+        document.body.appendChild(menu);
+        
+        // Close menu when clicking outside
+        setTimeout(() => {
+            const closeMenu = (e) => {
+                if (!menu.contains(e.target)) {
+                    menu.remove();
+                    document.removeEventListener('click', closeMenu);
+                }
+            };
+            document.addEventListener('click', closeMenu);
+        }, 0);
+    }
+});
+
+// Add clipboard helper
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        notifications.success('Copied', 'Link copied to clipboard');
+    }).catch(() => {
+        notifications.error('Copy Failed', 'Failed to copy link');
+    });
+}
+
+// Add this new function for rich link previews
+async function fetchLinkPreview(url) {
+    try {
+        const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+        return data.data;
+    } catch (error) {
+        console.error('Failed to fetch link preview:', error);
+        return null;
     }
 }
 
@@ -1295,3 +1793,155 @@ document.getElementById('editor').addEventListener('paste', function(e) {
     }
     // ...existing paste handler code...
 });
+
+// Add this function to update toolbar state
+function updateToolbarState() {
+    const editor = document.getElementById('editor');
+    if (!editor.contains(document.activeElement)) return;
+
+    // Get current selection
+    const selection = window.getSelection();
+    const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+    const hasSelection = !selection.isCollapsed;
+
+    // Get formatting state
+    const isBold = document.queryCommandState('bold');
+    const isItalic = document.queryCommandState('italic');
+    const isUnderline = document.queryCommandState('underline');
+    const alignment = ['justifyLeft', 'justifyCenter', 'justifyRight']
+        .find(cmd => document.queryCommandState(cmd));
+
+    // Get current font and size
+    const fontName = document.queryCommandValue('fontName');
+    const fontSize = document.queryCommandValue('fontSize');
+
+    // Update button states
+    document.querySelector('button[title="Bold"]').classList.toggle('active', isBold);
+    document.querySelector('button[title="Italic"]').classList.toggle('active', isItalic);
+    document.querySelector('button[title="Underline"]').classList.toggle('active', isUnderline);
+    document.querySelector('button[title="Align Left"]').classList.toggle('active', alignment === 'justifyLeft');
+    document.querySelector('button[title="Align Center"]').classList.toggle('active', alignment === 'justifyCenter');
+    document.querySelector('button[title="Align Right"]').classList.toggle('active', alignment === 'justifyRight');
+
+    // Update select elements
+    const fontSelect = document.querySelector('select[title="Font"]');
+    const sizeSelect = document.querySelector('select[title="Size"]');
+
+    if (fontName) {
+        // Try to match the font name (handling quotes and fallbacks)
+        const normalizedFontName = fontName.replace(/['"]/g, '').split(',')[0].trim();
+        if (Array.from(fontSelect.options).some(opt => opt.value === normalizedFontName)) {
+            fontSelect.value = normalizedFontName;
+        }
+    }
+
+    if (fontSize) {
+        sizeSelect.value = fontSize;
+    }
+
+    // Disable formatting controls if no text is selected
+    const formattingControls = document.querySelectorAll('.toolbar button:not([title="Document"]), .toolbar select');
+    formattingControls.forEach(control => {
+        control.disabled = isMarkdownMode;
+    });
+}
+
+// Update the existing event listeners section
+function initializeSelectionTracking() {
+    const editor = document.getElementById('editor');
+
+    // Track selection changes
+    document.addEventListener('selectionchange', updateToolbarState);
+
+    // Track mouse up for selection changes
+    editor.addEventListener('mouseup', updateToolbarState);
+
+    // Track key combinations that might affect selection
+    editor.addEventListener('keyup', (e) => {
+        if (e.key.startsWith('Arrow') || e.key === 'Shift' || e.ctrlKey || e.metaKey) {
+            updateToolbarState();
+        }
+    });
+
+    // Update state when format commands are executed
+    const formatButtons = document.querySelectorAll('.toolbar button');
+    formatButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            setTimeout(updateToolbarState, 0);
+        });
+    });
+
+    // Update state when select values change
+    const formatSelects = document.querySelectorAll('.toolbar select');
+    formatSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            setTimeout(updateToolbarState, 0);
+        });
+    });
+}
+
+// Add this new helper function
+function mergeAdjacentSpans(container) {
+    const spans = container.getElementsByTagName('span');
+    for (let i = spans.length - 1; i >= 0; i--) {
+        const span = spans[i];
+        const nextSibling = span.nextSibling;
+        
+        if (nextSibling && nextSibling.nodeType === 1 && nextSibling.tagName === 'SPAN') {
+            if (span.style.fontFamily === nextSibling.style.fontFamily) {
+                // Merge the spans
+                while (nextSibling.firstChild) {
+                    span.appendChild(nextSibling.firstChild);
+                }
+                nextSibling.parentNode.removeChild(nextSibling);
+            }
+        }
+        
+        // Remove empty spans
+        if (span.textContent.trim() === '') {
+            span.parentNode.removeChild(span);
+        }
+        // Remove spans that only contain other spans with the same font
+        else if (span.children.length === span.getElementsByTagName('span').length) {
+            const allChildrenSameFont = Array.from(span.children).every(
+                child => child.style.fontFamily === span.style.fontFamily
+            );
+            if (allChildrenSameFont) {
+                while (span.firstChild) {
+                    span.parentNode.insertBefore(span.firstChild, span);
+                }
+                span.parentNode.removeChild(span);
+            }
+        }
+    }
+}
+
+// Add this new function
+function preserveEditorFocus(e) {
+    const editor = document.getElementById('editor');
+    const selection = window.getSelection();
+    const isClickInside = editor.contains(e.target);
+    
+    // Don't handle dropdown menus
+    const isDropdown = e.target.closest('select, .dropdown-content, .user-dropdown');
+    if (isDropdown) return;
+    
+    // Define which elements should preserve focus
+    const isPreserveFocus = e.target.closest('.toolbar button:not([title="Document"]), .submenu:not(select), .dialog');
+    
+    // Don't process if clicking inside editor or it's already focused
+    if (isClickInside || !selection.rangeCount) return;
+    
+    // If clicking toolbar buttons or other UI elements (except dropdowns), prevent focus loss
+    if (isPreserveFocus) {
+        e.preventDefault();
+        const range = selection.getRangeAt(0);
+        
+        // Restore the selection after the click
+        setTimeout(() => {
+            selection.removeAllRanges();
+            selection.addRange(range);
+            editor.focus();
+        }, 0);
+    }
+}

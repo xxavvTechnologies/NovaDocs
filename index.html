@@ -86,9 +86,9 @@
                     <h3>Nova Docs</h3>
                     <div class="app-info">
                         <p><span class="label">Documents:</span> <span id="document-count">Loading...</span></p>
-                        <p><span class="label">Version:</span> <span>3.0.0</span></p>
+                        <p><span class="label">Version:</span> <span>4.0.0</span></p>
                         <p><span class="label">Developer:</span> <span>xxavvTechnologies</span></p>
-                        <p><span class="label">Last Updated:</span> <span>January 21, 2025</span></p>
+                        <p><span class="label">Last Updated:</span> <span>February 1, 2025</span></p>
                     </div>
                     <a href="https://tech.xxavvgroup.com/nova/docs" target="_blank">
                         Legal & Technical Information →
@@ -111,7 +111,7 @@
             <div class="toolbar-group">
                 <button onclick="toggleDocManager()" title="Document"><i class="fa-solid fa-folder"></i></button>
                 <!-- Common text formatting -->
-                <select onchange="formatDoc('fontName', this.value)" title="Font">
+                <select title="Font" class="font-select">
                     <optgroup label="Serif">
                         <option value="Times New Roman">Times New Roman</option>
                         <option value="Georgia">Georgia</option>
@@ -148,6 +148,7 @@
             <div class="toolbar-group">
                 <button onclick="toggleSubmenu('insert-menu')" title="Insert"><i class="fa-solid fa-plus"></i></button>
                 <button onclick="toggleSubmenu('table-menu')" title="Table"><i class="fa-solid fa-table"></i></button>
+                <button onclick="toggleSubmenu('tools-menu')" title="More Tools"><i class="fa-solid fa-ellipsis"></i></button>
             </div>
 
             <!-- Insert Submenu -->
@@ -196,6 +197,39 @@
                 </div>
             </div>
 
+            <!-- Tools Submenu -->
+            <div id="tools-menu" class="submenu tools-submenu">
+                <div class="submenu-content">
+                    <div class="submenu-section">
+                        <h4>Document Tools</h4>
+                        <button onclick="toggleComments()" title="Comments">
+                            <i class="fa-solid fa-comments"></i> Comments & Suggestions
+                        </button>
+                        <button onclick="toggleHistory()" title="Revision History">
+                            <i class="fa-solid fa-history"></i> Version History
+                        </button>
+                        <button onclick="toggleOutline()" title="Document Outline">
+                            <i class="fa-solid fa-list"></i> Document Outline
+                        </button>
+                    </div>
+                    <div class="submenu-section">
+                        <h4>View Options</h4>
+                        <button onclick="toggleReadingStats()" title="Reading Stats">
+                            <i class="fa-solid fa-book-reader"></i> Reading Statistics
+                        </button>
+                        <button onclick="toggleMarkdownMode()" id="markdownToggle" title="Toggle Markdown">
+                            <i class="fa-brands fa-markdown"></i> Markdown Mode
+                        </button>
+                    </div>
+                    <div class="submenu-section">
+                        <h4>Help</h4>
+                        <button onclick="showKeyboardShortcuts()" title="Keyboard Shortcuts">
+                            <i class="fa-solid fa-keyboard"></i> Keyboard Shortcuts
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="toolbar-group toolbar-right">
                 <select id="docStatus" onchange="updateDocStatus(this.value)" title="Status">
                     <option value="draft">Draft</option>
@@ -203,9 +237,6 @@
                 </select>
                 <button onclick="toggleFindReplace()" title="Find"><i class="fa-solid fa-search"></i></button>
                 <button onclick="printDocument()" title="Print"><i class="fa-solid fa-print"></i></button>
-                <button onclick="toggleMarkdownMode()" id="markdownToggle" title="Toggle Markdown">
-                    <i class="fa-brands fa-markdown"></i>
-                </button>
             </div>
         </div>
 
@@ -239,6 +270,12 @@
         <div id="docManager" class="doc-manager">
             <div class="doc-manager-content">
                 <h2>Document Manager</h2>
+                <a href="https://central.nova.xxavvgroup.com" target="_blank" 
+                   class="nova-central-btn" 
+                   data-tooltip="Access all your files and all Nova apps in one place">
+                    <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Central%20wo%20Text.png" alt="Nova Central">
+                    <span>Open in Nova Central</span>
+                </a>
                 <input type="text" id="docTitle" placeholder="Document Title" class="doc-title-input">
                 <button class="new-doc-btn" onclick="createNewDocument()">New Document</button>
                 <div id="docList"></div>
@@ -314,6 +351,56 @@
             </div>
         </div>
     </div>
+
+    <!-- Add sidebar panels -->
+    <div id="commentsPanel" class="sidebar-panel">
+        <div class="sidebar-header">
+            <h3>Comments</h3>
+            <button onclick="toggleComments()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="commentsList"></div>
+        <div class="comment-actions">
+            <button onclick="toggleSuggestionMode()" id="suggestionModeBtn">
+                <i class="fas fa-lightbulb"></i> Suggestion Mode
+            </button>
+        </div>
+    </div>
+
+    <div id="historyPanel" class="sidebar-panel">
+        <div class="sidebar-header">
+            <h3>Revision History</h3>
+            <button onclick="toggleHistory()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="revisionsList"></div>
+    </div>
+
+    <div id="outlinePanel" class="sidebar-panel">
+        <div class="sidebar-header">
+            <h3>Document Outline</h3>
+            <button onclick="toggleOutline()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="outlineList"></div>
+    </div>
+
+    <!-- Add reading stats -->
+    <div id="readingStats" class="reading-stats">
+        <span id="wordCountDetail"></span>
+        <span id="readingTime"></span>
+    </div>
+
+    <!-- Add keyboard shortcuts dialog -->
+    <div id="shortcutsDialog" class="dialog shortcuts-dialog">
+        <div class="dialog-content">
+            <h3>Keyboard Shortcuts</h3>
+            <div class="shortcuts-grid" id="shortcutsList"></div>
+            <div class="dialog-buttons">
+                <button onclick="closeKeyboardShortcuts()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turndown/7.1.1/turndown.min.js"></script>
     <script src="app.js"></script>
     <script src="notifications.js"></script>
 </body>
