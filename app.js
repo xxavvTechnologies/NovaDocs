@@ -65,6 +65,7 @@ class DocumentEditor {
 
             if (action === 'new') {
                 await this.createNewDocument();
+                this.updateDocumentTitle('Untitled Document'); // Add this line
             } else if (docId) {
                 const docRef = doc(db, 'documents', docId);
                 const docSnap = await getDoc(docRef);
@@ -82,34 +83,28 @@ class DocumentEditor {
                         // Set content and title
                         const content = data.content || '<div class="page" data-page="1"><p>Start typing here...</p></div>';
                         this.editor.innerHTML = content;
-                        document.getElementById('docTitle').value = data.title || 'Untitled Document';
-                        document.title = `${data.title || 'Untitled Document'} - Nova Docs`;
+                        this.updateDocumentTitle(data.title || 'Untitled Document'); // Update this line
                         
-                        // Load original revision
-                        const originalRevDoc = await getDoc(doc(db, 'documents', docId, 'revisions', 'original'));
-                        if (originalRevDoc.exists()) {
-                            this.originalContent = originalRevDoc.data().content;
-                        }
-                        
-                        // Update page breaks after content is loaded
-                        setTimeout(() => this.checkPageBreaks(), 100);
-                    } else {
-                        notifications.error('Access Denied', 'You do not have permission to access this document');
-                        window.location.href = 'documents.html';
+                        // Load original revision if exists...
                     }
-                } else {
-                    notifications.error('Not Found', 'Document not found');
-                    window.location.href = 'documents.html';
                 }
-            } else {
-                // No document ID and no new action, redirect to documents page
-                window.location.href = 'documents.html';
             }
         } catch (error) {
             console.error('Error loading document:', error);
-            notifications.error('Load Failed', 'Could not load the document');
-            window.location.href = 'documents.html';
+            this.updateDocumentTitle('Error Loading Document');
         }
+    }
+
+    // Add this new method
+    updateDocumentTitle(title) {
+        // Update the input field
+        const titleInput = document.getElementById('docTitle');
+        if (titleInput) {
+            titleInput.value = title;
+        }
+
+        // Update the browser tab title
+        document.title = `${title} - Nova Docs`;
     }
 
     setupEditor() {
@@ -637,17 +632,22 @@ class DocumentEditor {
         const cancelShare = document.getElementById('cancelShare');
         const confirmShare = document.getElementById('confirmShare');
         const shareLinkContainer = document.getElementById('shareLinkContainer');
-        const shareLink = document.getElementById('shareLink');
-        const copyLink = document.getElementById('copyLink');
         
         shareBtn.addEventListener('click', () => this.openShareDialog());
         cancelShare.addEventListener('click', () => shareDialog.style.display = 'none');
         confirmShare.addEventListener('click', () => this.handleShare());
-        copyLink.addEventListener('click', () => this.copyShareLink());
-
+        
+        // Add copy link button handler
+        document.getElementById('copyLink')?.addEventListener('click', () => this.copyShareLink());
+    
+        // Handle share type changes
         document.querySelectorAll('input[name="shareType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 shareLinkContainer.style.display = e.target.value === 'public' ? 'flex' : 'none';
+                if (e.target.value === 'public') {
+                    const shareLink = `${window.location.origin}/view.html?id=${this.currentDocId}`;
+                    document.getElementById('shareLink').value = shareLink;
+                }
             });
         });
     }
@@ -655,32 +655,38 @@ class DocumentEditor {
     async handleShare() {
         const shareType = document.querySelector('input[name="shareType"]:checked').value;
         const shareEmails = document.getElementById('shareEmails').value;
+        const allowCopy = document.getElementById('allowCopy')?.checked ?? true;
         const docRef = doc(db, 'documents', this.currentDocId);
-
+    
         try {
             if (shareType === 'public') {
                 await setDoc(docRef, {
                     isPublic: true,
+                    allowCopy,
                     sharedWith: []
                 }, { merge: true });
-
-                const shareLink = `${window.location.origin}/view/${this.currentDocId}`;
+    
+                // Immediately show share link after setting public
+                const shareLinkContainer = document.getElementById('shareLinkContainer');
+                shareLinkContainer.style.display = 'flex';
+                const shareLink = `${window.location.origin}/view.html?id=${this.currentDocId}`;
                 document.getElementById('shareLink').value = shareLink;
+                
                 notifications.success('Shared', 'Document is now public');
             } else {
                 const emails = shareEmails.split(',').map(email => email.trim()).filter(Boolean);
                 
-                // Validate each email against users collection
+                if (emails.length === 0) {
+                    notifications.warning('No Recipients', 'Please enter at least one email address');
+                    return;
+                }
+    
                 const validUsers = [];
                 const invalidEmails = [];
-
+    
                 for (const email of emails) {
                     const usersRef = collection(db, 'users');
-                    const q = query(
-                        usersRef,
-                        where('email', '==', email),
-                        limit(1)
-                    );
+                    const q = query(usersRef, where('email', '==', email), limit(1));
                     
                     const querySnapshot = await getDocs(q);
                     if (!querySnapshot.empty) {
@@ -689,31 +695,30 @@ class DocumentEditor {
                         invalidEmails.push(email);
                     }
                 }
-
-                // Show warning if some emails were invalid
+    
                 if (invalidEmails.length > 0) {
                     notifications.warning(
                         'Some users not found', 
                         `The following users need a Nova account: ${invalidEmails.join(', ')}`
                     );
                 }
-
-                // Only proceed if we found valid users
+    
                 if (validUsers.length > 0) {
                     await setDoc(docRef, {
                         isPublic: false,
+                        allowCopy,
                         sharedWith: validUsers
                     }, { merge: true });
                     
                     notifications.success('Shared', `Document shared with ${validUsers.length} user(s)`);
+                    document.getElementById('shareDialog').style.display = 'none';
                 }
             }
-            document.getElementById('shareDialog').style.display = 'none';
         } catch (error) {
             notifications.error('Share Failed', error.message);
         }
     }
-
+    
     copyShareLink() {
         const shareLink = document.getElementById('shareLink');
         shareLink.select();
@@ -721,15 +726,49 @@ class DocumentEditor {
         notifications.success('Copied', 'Link copied to clipboard');
     }
 
-    openShareDialog() {
+    async openShareDialog() {
         const dialog = document.getElementById('shareDialog');
+        const shareLinkContainer = document.getElementById('shareLinkContainer');
         dialog.style.display = 'block';
-        this.updateSharedUsersList();
-        // Reset form
-        document.querySelector('input[name="shareType"][value="private"]').checked = true;
-        document.getElementById('shareEmails').value = '';
-        document.getElementById('shareLinkContainer').style.display = 'none';
+        
+        try {
+            // Get current document state
+            const docRef = doc(db, 'documents', this.currentDocId);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                // Set correct radio button based on current share state
+                const shareType = data.isPublic ? 'public' : 'private';
+                document.querySelector(`input[name="shareType"][value="${shareType}"]`).checked = true;
+                
+                // Update share link container visibility and URL if public
+                if (data.isPublic) {
+                    shareLinkContainer.style.display = 'flex';
+                    const shareLink = `${window.location.origin}/view.html?id=${this.currentDocId}`;
+                    document.getElementById('shareLink').value = shareLink;
+                } else {
+                    shareLinkContainer.style.display = 'none';
+                    document.getElementById('shareEmails').value = '';
+                }
+    
+                // Set allow copy checkbox
+                const allowCopyCheckbox = document.getElementById('allowCopy');
+                if (allowCopyCheckbox) {
+                    allowCopyCheckbox.checked = data.allowCopy ?? true;
+                }
+            }
+            
+            // Update shared users list
+            await this.updateSharedUsersList();
+            
+        } catch (error) {
+            console.error('Error loading share settings:', error);
+            notifications.error('Error', 'Could not load sharing settings');
+        }
     }
+    
 
     async updateSharedUsersList() {
         const sharedUsersList = document.getElementById('sharedUsersList');
@@ -802,8 +841,14 @@ class DocumentEditor {
         titleInput.addEventListener('blur', () => this.saveTitle());
         titleInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent newline in title
                 titleInput.blur();
             }
+        });
+
+        // Add this new input handler
+        titleInput.addEventListener('input', () => {
+            document.title = `${titleInput.value.trim() || 'Untitled Document'} - Nova Docs`;
         });
     }
 
@@ -820,6 +865,7 @@ class DocumentEditor {
                 lastModified: new Date().toISOString()
             }, { merge: true });
 
+            this.updateDocumentTitle(newTitle); // Add this line
             notifications.success('Saved', 'Document title updated');
         } catch (error) {
             notifications.error('Save Failed', 'Could not update document title');

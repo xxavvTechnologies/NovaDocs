@@ -1,0 +1,25 @@
+.document-controls {
+    padding: 8px 16px;
+    background: #fff8e5;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.control-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #856404;
+}
+
+.control-notice i {
+    font-size: 1.1rem;
+}
+
+.document-content {
+    user-select: var(--allow-copy, none);
+}
+
+.document-content * {
+    user-select: var(--allow-copy, none);
+}

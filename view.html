@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Document - Nova Docs</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="logo-container">
+                <a href="documents.html" class="logo">
+                    <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs">
+                </a>
+            </div>
+            <div class="document-title">
+                <h1 id="docTitle">Loading...</h1>
+            </div>
+            <div class="account-section">
+                <button class="primary-button">
+                  <a href="documents.html" class="primary-button"></a>
+                    <i class="fa-solid fa-link"></i>
+                    Open Nova Docs
+                </button>
+                <button id="makeACopy" class="primary-button">
+                    <i class="fas fa-copy"></i>
+                    Make a copy
+                </button>
+            </div>
+        </header>
+
+        <!-- Document Content -->
+        <div class="editor-container view-only" id="documentContent">
+            <div class="document-controls">
+                <div class="control-notice" id="copyNotice">
+                    <i class="fas fa-lock"></i>
+                    <span>Copy and paste are disabled by the document owner</span>
+                </div>
+            </div>
+            <div class="document-content">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Loading document...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div class="notifications-container" id="notifications"></div>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="view.js"></script>
+    <script src="notifications.js"></script>
+</body>
+</html>
