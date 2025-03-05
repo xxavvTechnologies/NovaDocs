@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>My Documents - Nova Docs</title>
+    <meta name="description" content="Access and manage all your documents in Nova Docs. Organize, share, and collaborate on your documents easily.">
+    <meta name="keywords" content="document management, file sharing, document collaboration, Nova Docs">
+    <meta name="author" content="xxavvTechnlogies">
+    <meta name="robots" content="noindex, nofollow"> <!-- Private page -->
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="My Documents - Nova Docs">
+    <meta property="og:description" content="Access and manage all your documents in Nova Docs. Organize, share, and collaborate on your documents easily.">
+    <meta property="og:image" content="https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="My Documents - Nova Docs">
+    <meta property="twitter:description" content="Access and manage all your documents in Nova Docs. Organize, share, and collaborate on your documents easily.">
+    <meta property="twitter:image" content="https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Preview.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+    <link rel="apple-touch-icon" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="documents.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Version Banner - Moved inside container -->
+        <div class="version-banner">
+            <div class="banner-content">
+                <span class="version-tag">New</span>
+                <span class="banner-text">Nova Docs 5.0 is here! Check out all the new features</span>
+                <a href="changelog.html" class="banner-link">Learn More →</a>
+            </div>
+            <button class="banner-close" id="closeBanner">×</button>
+        </div>
+
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="logo-container">
+                <a href="documents.html" class="logo">
+                    <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs">
+                    <span>Nova Docs</span>
+                </a>
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchDocs" placeholder="Search documents...">
+            </div>
+            <div class="user-section">
+                <button id="newDocBtn" class="primary-button">
+                    <i class="fas fa-plus"></i>
+                    New Document
+                </button>
+                <div class="user-dropdown">
+                    <button class="dropbtn" id="userMenuBtn">
+                        <img src="" alt="Profile" class="profile-picture" id="userAvatar">
+                    </button>
+                    <div class="dropdown-content" id="userDropdown">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Filters</h3>
+                    <button class="filter-btn active" data-filter="all">
+                        <i class="fas fa-file-alt"></i>
+                        All Documents
+                    </button>
+                    <button class="filter-btn" data-filter="recent">
+                        <i class="fas fa-clock"></i>
+                        Recent
+                    </button>
+                    <button class="filter-btn" data-filter="shared">
+                        <i class="fas fa-share-alt"></i>
+                        Shared with me
+                    </button>
+                    <button class="filter-btn" data-filter="trash">
+                        <i class="fas fa-trash"></i>
+                        Trash
+                    </button>
+                </div>
+            </div>
+
+            <div class="documents-container">
+                <div class="documents-header">
+                    <h2>My Documents</h2>
+                    <div class="view-options">
+                        <button id="gridView" class="view-btn active">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button id="listView" class="view-btn">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="documents-grid" id="documentsGrid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Notifications Container -->
+        <div class="notifications-container" id="notifications"></div>
+    </div>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="documents.js"></script>
+    <script src="notifications.js"></script>
+</body>
+</html>

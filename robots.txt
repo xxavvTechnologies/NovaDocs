@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Disallow: /documents.html
+Disallow: /editor.html
+Sitemap: https://docs.nova.xxavvgroup.com/sitemap.xml

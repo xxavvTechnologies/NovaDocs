@@ -11,110 +11,12 @@ import {
     query,
     where,
     limit
-} from './firebase-config.js';  // Fixed the import path
+} from '../firebase-config.js';
 
 class DocumentEditor {
     constructor() {
-        this.init();
-    }
-
-    async init() {
-        try {
-            // Check auth state first
-            const user = auth.currentUser;
-            if (!user) {
-                // If no current user, wait briefly for auth to initialize
-                await new Promise(resolve => {
-                    const unsubscribe = auth.onAuthStateChanged(user => {
-                        unsubscribe();
-                        resolve(user);
-                    });
-                    // Timeout after 2 seconds
-                    setTimeout(() => resolve(null), 2000);
-                });
-            }
-
-            if (!auth.currentUser) {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            // Initialize editor only if authenticated
-            await this.setupEditor();
-            await this.loadDocumentFromUrl();
-        } catch (error) {
-            console.error('Auth check failed:', error);
-            window.location.href = 'index.html';
-        }
-    }
-
-    async loadDocumentFromUrl() {
-        try {
-            // Get document ID from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const docId = urlParams.get('id');
-            const action = urlParams.get('action');
-
-            // Show loading state
-            this.editor.innerHTML = `
-                <div class="loading-state" style="display: flex; justify-content: center; align-items: center; height: 200px;">
-                    <i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i>
-                    Loading document...
-                </div>
-            `;
-
-            if (action === 'new') {
-                await this.createNewDocument();
-            } else if (docId) {
-                const docRef = doc(db, 'documents', docId);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    // Check if user has access to this document
-                    if (data.userId === this.currentUser.uid || 
-                        data.isPublic || 
-                        (data.sharedWith && data.sharedWith.includes(this.currentUser.uid))) {
-                        
-                        this.currentDocId = docId;
-                        
-                        // Set content and title
-                        const content = data.content || '<div class="page" data-page="1"><p>Start typing here...</p></div>';
-                        this.editor.innerHTML = content;
-                        document.getElementById('docTitle').value = data.title || 'Untitled Document';
-                        document.title = `${data.title || 'Untitled Document'} - Nova Docs`;
-                        
-                        // Load original revision
-                        const originalRevDoc = await getDoc(doc(db, 'documents', docId, 'revisions', 'original'));
-                        if (originalRevDoc.exists()) {
-                            this.originalContent = originalRevDoc.data().content;
-                        }
-                        
-                        // Update page breaks after content is loaded
-                        setTimeout(() => this.checkPageBreaks(), 100);
-                    } else {
-                        notifications.error('Access Denied', 'You do not have permission to access this document');
-                        window.location.href = 'documents.html';
-                    }
-                } else {
-                    notifications.error('Not Found', 'Document not found');
-                    window.location.href = 'documents.html';
-                }
-            } else {
-                // No document ID and no new action, redirect to documents page
-                window.location.href = 'documents.html';
-            }
-        } catch (error) {
-            console.error('Error loading document:', error);
-            notifications.error('Load Failed', 'Could not load the document');
-            window.location.href = 'documents.html';
-        }
-    }
-
-    setupEditor() {
         this.editor = document.getElementById('editor');
-        this.currentUser = auth.currentUser;
+        this.currentUser = null;
         this.currentDocId = null;
         this.saveTimeout = null;
         this.activeButtons = new Set();
@@ -122,6 +24,7 @@ class DocumentEditor {
         this.attachEventListeners();
         this.setupAuthStateListener();
         this.setupToolbar();
+        this.createNewDocumentIfNeeded();
         this.lastSaveTime = null;
         this.originalContent = null;
         this.sessionStartTime = new Date();
@@ -314,12 +217,13 @@ class DocumentEditor {
     }
 
     setupAuthStateListener() {
-        auth.onAuthStateChanged(user => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 this.currentUser = user;
                 this.updateUserInterface();
+                await this.loadUserDocuments();
             } else {
-                window.location.href = 'index.html';
+                this.redirectToLogin();
             }
         });
     }
@@ -411,6 +315,12 @@ class DocumentEditor {
 
         } catch (error) {
             console.error('Error managing revisions:', error);
+        }
+    }
+
+    async createNewDocumentIfNeeded() {
+        if (!this.currentDocId) {
+            await this.createNewDocument();
         }
     }
 
@@ -608,8 +518,8 @@ class DocumentEditor {
                 <img src="${this.currentUser.photoURL || 'https://d2zcpib8duehag.cloudfront.net/accountuser.png'}" alt="Profile">
                 <span>${this.currentUser.displayName || this.currentUser.email}</span>
             </div>
-            <a href="documents.html" id="myDocsBtn"><i class="fas fa-folder"></i> My Documents</a>
-            <a href="editor.html?action=new" id="newDocBtn"><i class="fas fa-plus"></i> New Document</a>
+            <a href="#" id="newDocBtn"><i class="fas fa-plus"></i> New Document</a>
+            <a href="#" id="myDocsBtn"><i class="fas fa-folder"></i> My Documents</a>
             <a href="#" id="settingsBtn"><i class="fas fa-cog"></i> Settings</a>
             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
         `;
@@ -627,8 +537,7 @@ class DocumentEditor {
     }
 
     redirectToLogin() {
-        // Fix the login path
-        window.location.href = 'index.html';
+        window.location.href = '../login.html';
     }
 
     initializeShareDialog() {
@@ -660,6 +569,7 @@ class DocumentEditor {
         try {
             if (shareType === 'public') {
                 await setDoc(docRef, {
+                    isPublic: true,
                     isPublic: true,
                     sharedWith: []
                 }, { merge: true });

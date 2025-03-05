@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Docs - Document Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styless.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="logo-container">
+                <a href="#" class="logo">
+                    <img src="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png" alt="Nova Docs">
+                </a>
+            </div>
+            <div class="document-title">
+                <input type="text" id="docTitle" placeholder="Untitled Document" class="title-input">
+            </div>
+            <div class="account-section">
+                <button id="saveStatus" class="user-button">
+                    <i class="fas fa-check"></i>
+                    <span>All changes saved</span>
+                </button>
+                <div class="user-dropdown">
+                    <button class="dropbtn" id="userMenuBtn">
+                        <img src="" alt="Profile" class="profile-picture" id="userAvatar">
+                    </button>
+                    <div class="dropdown-content" id="userDropdown">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button id="undoBtn" title="Undo"><i class="fas fa-undo"></i></button>
+                <button id="redoBtn" title="Redo"><i class="fas fa-redo"></i></button>
+                <select title="Font" class="font-select" id="fontSelect">
+                    <optgroup label="Serif Fonts">
+                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option value="'Georgia', serif">Georgia</option>
+                        <option value="'Lora', Georgia, serif">Lora</option>
+                        <option value="'Merriweather', Georgia, serif">Merriweather</option>
+                    </optgroup>
+                    <optgroup label="Sans-Serif Fonts">
+                        <option value="'Arial', Helvetica, sans-serif">Arial</option>
+                        <option value="'Inter', system-ui, sans-serif">Inter</option>
+                    </optgroup>
+                    <optgroup label="Monospace">
+                        <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                    </optgroup>
+                </select>
+                <select title="Size" id="fontSize">
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                    <option value="16" selected>16</option>
+                    <option value="18">18</option>
+                    <option value="20">20</option>
+                    <option value="24">24</option>
+                    <option value="28">28</option>
+                    <option value="32">32</option>
+                </select>
+            </div>
+            
+            <div class="toolbar-group">
+                <button id="boldBtn" title="Bold"><i class="fas fa-bold"></i></button>
+                <button id="italicBtn" title="Italic"><i class="fas fa-italic"></i></button>
+                <button id="underlineBtn" title="Underline"><i class="fas fa-underline"></i></button>
+                <button id="strikeBtn" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+            </div>
+
+            <div class="toolbar-group">
+                <button id="alignLeftBtn" title="Align Left"><i class="fas fa-align-left"></i></button>
+                <button id="alignCenterBtn" title="Align Center"><i class="fas fa-align-center"></i></button>
+                <button id="alignRightBtn" title="Align Right"><i class="fas fa-align-right"></i></button>
+                <button id="alignJustifyBtn" title="Justify"><i class="fas fa-align-justify"></i></button>
+            </div>
+
+            <div class="toolbar-group toolbar-right">
+                <button id="commentsBtn" title="Comments"><i class="fas fa-comments"></i></button>
+                <button id="historyBtn" title="History"><i class="fas fa-history"></i></button>
+                <button id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
+            </div>
+        </div>
+
+        <!-- Editor Container -->
+        <div class="editor-container">
+            <div id="editor" contenteditable="true">
+                <div class="page" data-page="1">
+                    <h1>Untitled Document</h1>
+                    <p>Start typing here...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="page-indicator" id="pageIndicator">Page 1 of 1</span>
+            <span id="wordCount">0 words</span>
+            <span id="charCount">0 characters</span>
+            <span id="lastSaved">Last saved: Just now</span>
+        </div>
+
+        <!-- Notifications Container -->
+        <div class="notifications-container" id="notifications"></div>
+    </div>
+
+    <!-- Share Dialog -->
+    <div class="dialog" id="shareDialog">
+        <div class="dialog-content">
+            <h3>Share Document</h3>
+            
+            <!-- Add shared users list -->
+            <div class="shared-users">
+                <h4>Shared with</h4>
+                <div id="sharedUsersList" class="shared-users-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Share options -->
+            <div class="share-options">
+                <div class="share-option">
+                    <label>
+                        <input type="radio" name="shareType" value="private" checked>
+                        Share with specific people
+                    </label>
+                    <div class="share-emails">
+                        <input type="text" id="shareEmails" placeholder="Enter email addresses (comma separated)">
+                    </div>
+                </div>
+                <div class="share-option">
+                    <label>
+                        <input type="radio" name="shareType" value="public">
+                        Anyone with the link can view
+                    </label>
+                </div>
+            </div>
+            
+            <div class="share-link" id="shareLinkContainer" style="display: none;">
+                <input type="text" id="shareLink" readonly>
+                <button id="copyLink"><i class="fas fa-copy"></i></button>
+            </div>
+            <div class="dialog-buttons">
+                <button id="cancelShare">Cancel</button>
+                <button id="confirmShare" class="primary">Share</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Sidebar -->
+    <div class="sidebar-panel" id="historyPanel">
+        <div class="sidebar-header">
+            <h3>Document History</h3>
+            <button id="closeHistory" class="close-button">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="revision-list" id="revisionList">
+            <!-- Populated by JavaScript -->
+        </div>
+        <div class="sidebar-footer">
+            <button id="restoreVersion" class="primary-button" style="display: none;">
+                Restore This Version
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script type="module" src="../firebase-config.js"></script>
+    <script type="module" src="app.js"></script>
+    <script src="notifications.js"></script>
+</body>
+</html>
