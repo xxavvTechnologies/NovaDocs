@@ -1,25 +1,338 @@
+/* Base layout */
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--background);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header styles */
+.top-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--top-header-height);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+    flex: 0 0 auto;
+}
+
+.logo-container img {
+    height: 40px;
+    width: auto;
+}
+
+
+.document-title {
+    flex: 1;
+    padding: 0 2rem;
+}
+
+.document-title h1 {
+    font-size: 1.25rem;
+    margin: 0;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.account-section {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.account-section .primary-button {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.account-section .primary-button:hover {
+    background: var(--hover-gradient);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.account-section .primary-button:active {
+    transform: translateY(0);
+}
+
+.account-section .primary-button i {
+    font-size: 1rem;
+    color: var(--secondary);
+}
+
+.account-section .primary-button:hover i {
+    color: var(--primary);
+}
+
+/* Make a copy button specific styles */
+.account-section #makeACopy {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
+.account-section #makeACopy:hover {
+    background: var(--primary-dark);
+}
+
+.account-section #makeACopy i {
+    color: white;
+}
+
+/* Main content area */
+.editor-container.view-only {
+    margin-top: var(--top-header-height);
+    padding: 2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.document-metadata {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--secondary);
+    font-size: 0.9rem;
+}
+
 .document-controls {
-    padding: 8px 16px;
+    width: 100%;
+    max-width: var(--page-width);
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
     background: #fff8e5;
     border-radius: 8px;
-    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .control-notice {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
     color: #856404;
-}
-
-.control-notice i {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
 }
 
 .document-content {
-    user-select: var(--allow-copy, none);
+    width: 100%;
+    max-width: var(--page-width);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
-.document-content * {
-    user-select: var(--allow-copy, none);
+.page {
+    padding: 4rem;
+    min-height: 29.7cm;
+    box-sizing: border-box;
+    background: white;
 }
+
+/* Access Denied Overlay */
+.access-denied-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.access-denied-content {
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 480px;
+    width: 100%;
+    margin: 2rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.access-denied-icon {
+    font-size: 4rem;
+    color: var(--error);
+    margin-bottom: 1.5rem;
+}
+
+.access-denied-content h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text);
+}
+
+.access-denied-content p {
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.access-denied-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.access-denied-actions a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.access-denied-actions .primary-button {
+    background: var(--primary);
+    color: white;
+}
+
+.access-denied-actions .secondary-button {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .top-header {
+        padding: 0 1rem;
+    }
+
+    .document-title {
+        padding: 0 1rem;
+    }
+
+    .document-title h1 {
+        font-size: 1rem;
+    }
+
+    .editor-container.view-only {
+        padding: 1rem;
+    }
+
+    .page {
+        padding: 2rem;
+    }
+
+    .account-section {
+        gap: 0.5rem;
+    }
+
+    .account-section .button-text {
+        display: none;
+    }
+
+    .access-denied-content {
+        margin: 1rem;
+        padding: 2rem;
+    }
+
+    .access-denied-actions {
+        flex-direction: column;
+    }
+
+    .access-denied-actions a {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .account-section {
+        gap: 0.5rem;
+    }
+
+    .account-section .button-text {
+        display: none;
+    }
+
+    .account-section .primary-button {
+        padding: 0.75rem;
+    }
+
+    .account-section .primary-button i {
+        margin: 0;
+    }
+
+/* Embed mode */
+.embed-mode {
+    margin: 0;
+    padding: 0;
+}
+
+.embed-mode .top-header {
+    display: none;
+}
+
+.embed-mode .editor-container.view-only {
+    margin-top: 0;
+    padding: 0;
+}
+
+.embed-mode .document-content {
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.embed-mode .page {
+    padding: 1rem;
+    min-height: auto;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+} }

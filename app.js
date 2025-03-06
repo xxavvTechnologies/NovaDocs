@@ -656,6 +656,7 @@ class DocumentEditor {
         const shareType = document.querySelector('input[name="shareType"]:checked').value;
         const shareEmails = document.getElementById('shareEmails').value;
         const allowCopy = document.getElementById('allowCopy')?.checked ?? true;
+        const embedSize = document.querySelector('input[name="embedSize"]:checked')?.value || 'medium';
         const docRef = doc(db, 'documents', this.currentDocId);
     
         try {
@@ -666,12 +667,24 @@ class DocumentEditor {
                     sharedWith: []
                 }, { merge: true });
     
-                // Immediately show share link after setting public
+                // Update share options
                 const shareLinkContainer = document.getElementById('shareLinkContainer');
+                const embedContainer = document.getElementById('embedContainer');
                 shareLinkContainer.style.display = 'flex';
-                const shareLink = `${window.location.origin}/view.html?id=${this.currentDocId}`;
+                embedContainer.style.display = 'flex';
+    
+                // Generate links
+                const baseUrl = `${window.location.origin}/view.html?id=${this.currentDocId}`;
+                const shareLink = baseUrl;
+                const embedLink = `${baseUrl}&embed=true`;
+    
+                // Update share link
                 document.getElementById('shareLink').value = shareLink;
-                
+    
+                // Update embed code
+                const embedCode = this.generateEmbedCode(embedLink, embedSize);
+                document.getElementById('embedCode').value = embedCode;
+    
                 notifications.success('Shared', 'Document is now public');
             } else {
                 const emails = shareEmails.split(',').map(email => email.trim()).filter(Boolean);
@@ -724,6 +737,19 @@ class DocumentEditor {
         shareLink.select();
         document.execCommand('copy');
         notifications.success('Copied', 'Link copied to clipboard');
+    }
+
+    generateEmbedCode(embedUrl, size) {
+        const sizes = {
+            small: { width: '400px', height: '300px' },
+            medium: { width: '600px', height: '400px' },
+            large: { width: '800px', height: '600px' },
+            responsive: { width: '100%', height: '500px' }
+        };
+    
+        const { width, height } = sizes[size] || sizes.medium;
+    
+        return `<iframe src="${embedUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
     }
 
     async openShareDialog() {

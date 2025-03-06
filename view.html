@@ -3,13 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Document - Nova Docs</title>
+    <title>Loading... - Nova Docs</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- SEO Meta Tags -->
+    <meta id="metaDescription" name="description" content="View this document on Nova Docs">
+    <meta name="robots" content="noindex, follow">
+    <meta name="author" content="xxavvTechnologies">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta id="ogTitle" property="og:title" content="View Document - Nova Docs">
+    <meta id="ogDescription" property="og:description" content="View this document on Nova Docs">
+    <meta property="og:site_name" content="Nova Docs">
+    <meta property="og:image" content="https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta id="twitterTitle" property="twitter:title" content="View Document - Nova Docs">
+    <meta id="twitterDescription" property="twitter:description" content="View this document on Nova Docs">
+    <meta property="twitter:image" content="https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Preview.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+    <link rel="apple-touch-icon" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="view.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- Top Header -->
         <header class="top-header">
             <div class="logo-container">
                 <a href="documents.html" class="logo">
@@ -20,20 +45,19 @@
                 <h1 id="docTitle">Loading...</h1>
             </div>
             <div class="account-section">
-                <button class="primary-button">
-                  <a href="documents.html" class="primary-button"></a>
-                    <i class="fa-solid fa-link"></i>
-                    Open Nova Docs
-                </button>
+                <a href="documents.html" class="primary-button">
+                    <i class="fas fa-home"></i>
+                    <span class="button-text">Open Nova Docs</span>
+                </a>
                 <button id="makeACopy" class="primary-button">
                     <i class="fas fa-copy"></i>
-                    Make a copy
+                    <span class="button-text">Make a copy</span>
                 </button>
             </div>
         </header>
-
-        <!-- Document Content -->
-        <div class="editor-container view-only" id="documentContent">
+    
+        <div class="editor-container view-only">
+            <div class="document-metadata"></div>
             <div class="document-controls">
                 <div class="control-notice" id="copyNotice">
                     <i class="fas fa-lock"></i>

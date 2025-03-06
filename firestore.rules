@@ -178,16 +178,20 @@ service cloud.firestore {
     }
     
     // Documents collection with enhanced rules
-    match /documents/{docId} {
+        match /documents/{docId} {
       // Allow reading if:
       // 1. User owns the document
       // 2. Document is public
-      // 3. User is in the sharedWith array
-      allow read: if isAuthenticated();  // Allow any authenticated user to read documents
+      // 3. User is authenticated and is in the sharedWith array
+      allow read: if 
+        // Allow unauthenticated access if document is public
+        (resource.data.isPublic == true) ||
+        // Otherwise require authentication
+        (isAuthenticated());
       
       // Only owner can create/update/delete
       // Update the write rules to ensure sharedWith only contains valid user IDs
-      allow create: if isAuthenticated() && 
+  allow create: if isAuthenticated() && 
                    request.resource.data.userId == request.auth.uid &&
                    (
                      !('sharedWith' in request.resource.data) ||
