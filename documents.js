@@ -128,7 +128,7 @@ class DocumentManager {
         }
 
         // Check if banner should be shown
-        const bannerDismissed = localStorage.getItem('novadocs_banner_5_0') === 'dismissed';
+        const bannerDismissed = localStorage.getItem('novadocs_banner_5_2') === 'dismissed';
         if (bannerDismissed) {
             const banner = document.querySelector('.version-banner');
             const container = document.querySelector('.container');
