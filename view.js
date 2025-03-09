@@ -2,6 +2,9 @@ import { auth, db, doc, getDoc, setDoc, collection } from './firebase-config.js'
 
 class DocumentViewer {
     constructor() {
+        this.history = [];
+        this.currentHistoryIndex = -1;
+        this.isUndoRedo = false;
         this.init();
     }
 
@@ -106,8 +109,33 @@ class DocumentViewer {
         const contentArea = document.querySelector('.document-content');
         if (!contentArea) return;
 
-        // Set the document content
-        contentArea.innerHTML = data.content || '';
+        if (!data.content) {
+            contentArea.innerHTML = '<div class="page" data-page="1"><p>No content</p></div>';
+            return;
+        }
+
+        // Render content (it should already contain page divs from the editor)
+        contentArea.innerHTML = data.content;
+
+        // Verify page structure
+        const pages = contentArea.querySelectorAll('.page');
+        if (pages.length === 0) {
+            // If no pages found, wrap content in a page div
+            const content = contentArea.innerHTML;
+            contentArea.innerHTML = `<div class="page" data-page="1">${content}</div>`;
+        }
+
+        // Update page numbers
+        const allPages = contentArea.querySelectorAll('.page');
+        allPages.forEach((page, index) => {
+            page.dataset.page = index + 1;
+        });
+
+        // Update page indicator if it exists
+        const pageIndicator = document.querySelector('.page-indicator');
+        if (pageIndicator) {
+            pageIndicator.textContent = `Page 1 of ${allPages.length}`;
+        }
 
         // Set document title if it exists
         const titleElement = document.querySelector('.document-title');
@@ -121,7 +149,12 @@ class DocumentViewer {
             const lastModified = new Date(data.lastModified).toLocaleDateString();
             metadataElement.innerHTML = `
                 <span>Last modified: ${lastModified}</span>
-                ${data.isPublic ? '<span class="public-badge">Public</span>' : ''}
+                <div class="document-badges">
+                    ${data.isPublic ? '<span class="public-badge">Public</span>' : ''}
+                    ${!data.isPublic && data.userId !== auth.currentUser?.uid ? 
+                        '<span class="shared-badge"><i class="fas fa-lock"></i> Shared with you (Read-only)</span>' : 
+                        ''}
+                </div>
             `;
         }
 
@@ -131,6 +164,12 @@ class DocumentViewer {
         } else {
             contentArea.style.setProperty('--allow-copy', 'none');
         }
+
+        // Add initial state to history after rendering
+        this.pushToHistory(contentArea.innerHTML);
+        
+        // Setup undo/redo after content is loaded
+        this.setupUndoRedo();
     }
 
     showAccessDeniedOverlay(title, message, details = '') {
@@ -259,6 +298,95 @@ class DocumentViewer {
             }
         `;
         document.head.appendChild(style);
+    }
+
+    setupUndoRedo() {
+        // Get buttons
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+
+        // Add click handlers
+        undoBtn?.addEventListener('click', () => this.undo());
+        redoBtn?.addEventListener('click', () => this.redo());
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.undo();
+                } else if ((e.key === 'y') || (e.key === 'z' && e.shiftKey)) {
+                    e.preventDefault();
+                    this.redo();
+                }
+            }
+        });
+
+        // Initial state
+        this.updateUndoRedoButtons();
+    }
+
+    pushToHistory(content) {
+        if (this.isUndoRedo) return;
+        
+        // Remove any future redos
+        this.history = this.history.slice(0, this.currentHistoryIndex + 1);
+        
+        // Add new state
+        this.history.push(content);
+        this.currentHistoryIndex++;
+        
+        // Limit history size
+        if (this.history.length > 100) {
+            this.history.shift();
+            this.currentHistoryIndex--;
+        }
+        
+        this.updateUndoRedoButtons();
+    }
+
+    undo() {
+        if (this.currentHistoryIndex <= 0) return;
+        
+        this.isUndoRedo = true;
+        this.currentHistoryIndex--;
+        
+        const content = this.history[this.currentHistoryIndex];
+        const contentArea = document.querySelector('.document-content');
+        if (contentArea) {
+            contentArea.innerHTML = content;
+        }
+        
+        this.updateUndoRedoButtons();
+        this.isUndoRedo = false;
+    }
+
+    redo() {
+        if (this.currentHistoryIndex >= this.history.length - 1) return;
+        
+        this.isUndoRedo = true;
+        this.currentHistoryIndex++;
+        
+        const content = this.history[this.currentHistoryIndex];
+        const contentArea = document.querySelector('.document-content');
+        if (contentArea) {
+            contentArea.innerHTML = content;
+        }
+        
+        this.updateUndoRedoButtons();
+        this.isUndoRedo = false;
+    }
+
+    updateUndoRedoButtons() {
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        
+        if (undoBtn) {
+            undoBtn.disabled = this.currentHistoryIndex <= 0;
+        }
+        if (redoBtn) {
+            redoBtn.disabled = this.currentHistoryIndex >= this.history.length - 1;
+        }
     }
 }
 
