@@ -111,6 +111,17 @@
                 <button id="commentsBtn" title="Comments"><i class="fas fa-comments"></i></button>
                 <button id="historyBtn" title="History"><i class="fas fa-history"></i></button>
                 <button id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
+                <div class="dropdown">
+                    <button id="exportBtn" title="Export"><i class="fas fa-download"></i></button>
+                    <div class="dropdown-content" id="exportDropdown">
+                        <a href="#" data-format="pdf">Export as PDF</a>
+                        <a href="#" data-format="word">Export as Word</a>
+                        <a href="#" data-format="markdown">Export as Markdown</a>
+                        <a href="#" data-format="rtf">Export as RTF</a>
+                        <a href="#" data-format="html">Export as HTML</a>
+                        <a href="#" data-format="txt">Export as Plain Text</a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -173,11 +184,12 @@
                     </label>
                 </div>
             </div>
-            
+
             <div class="share-link" id="shareLinkContainer" style="display: none;">
                 <input type="text" id="shareLink" readonly>
                 <button id="copyLink"><i class="fas fa-copy"></i></button>
             </div>
+
             <div class="dialog-buttons">
                 <button id="cancelShare">Cancel</button>
                 <button id="confirmShare" class="primary">Share</button>
@@ -227,9 +239,12 @@
         </div>
     </div>
 
-    <!-- Firebase Scripts -->
+    <!-- Scripts -->
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="app.js"></script>
     <script src="notifications.js"></script>
+    <script src="exports.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
 </body>
 </html>

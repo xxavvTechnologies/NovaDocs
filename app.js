@@ -16,16 +16,32 @@ import {
 class DocumentEditor {
     constructor() {
         this.init();
+        // Add these properties at the start of constructor
+        this.pendingSave = null;
+        this.lastSaveTime = Date.now();
+        this.MIN_SAVE_INTERVAL = 10000; // Minimum 10 seconds between saves
+        this.exporter = new DocumentExporter();
     }
 
     async init() {
         try {
-            // Check auth state first
+            // Check for cached credentials first
+            const cachedUser = localStorage.getItem('user');
+            if (cachedUser) {
+                this.currentUser = JSON.parse(cachedUser);
+            }
+
+            // Check auth state
             const user = auth.currentUser;
             if (!user) {
                 // If no current user, wait briefly for auth to initialize
                 await new Promise(resolve => {
                     const unsubscribe = auth.onAuthStateChanged(user => {
+                        if (user) {
+                            // Cache user data
+                            localStorage.setItem('user', JSON.stringify(user));
+                            this.currentUser = user;
+                        }
                         unsubscribe();
                         resolve(user);
                     });
@@ -34,7 +50,7 @@ class DocumentEditor {
                 });
             }
 
-            if (!auth.currentUser) {
+            if (!this.currentUser) {
                 window.location.href = 'index.html';
                 return;
             }
@@ -80,12 +96,19 @@ class DocumentEditor {
                         
                         this.currentDocId = docId;
                         
-                        // Set content and title
-                        const content = data.content || '<div class="page" data-page="1"><p>Start typing here...</p></div>';
-                        this.editor.innerHTML = content;
-                        this.updateDocumentTitle(data.title || 'Untitled Document'); // Update this line
-                        
-                        // Load original revision if exists...
+                        // Handle markdown mode
+                        if (data.isMarkdown) {
+                            this.isMarkdownMode = true;
+                            const markdownToggle = document.getElementById('markdownToggle');
+                            markdownToggle.classList.add('active');
+                            this.editor.classList.add('markdown-mode');
+                            this.editor.innerHTML = `<pre><code>${data.content}</code></pre>`;
+                        } else {
+                            // Set content and title
+                            const content = data.content || '<div class="page" data-page="1"><p>Start typing here...</p></div>';
+                            this.editor.innerHTML = content;
+                        }
+                        this.updateDocumentTitle(data.title || 'Untitled Document');
                     }
                 }
             }
@@ -198,6 +221,42 @@ class DocumentEditor {
         document.getElementById('fontSize').addEventListener('change', (e) => {
             this.execCommand('fontSize', e.target.value);
         });
+
+        // Add Markdown mode toggle
+        const markdownToggle = document.getElementById('markdownToggle');
+        markdownToggle.addEventListener('click', () => this.toggleMarkdownMode());
+
+        this.isMarkdownMode = false;
+    }
+
+    toggleMarkdownMode() {
+        this.isMarkdownMode = !this.isMarkdownMode;
+        const markdownToggle = document.getElementById('markdownToggle');
+        const editor = document.getElementById('editor');
+
+        editor.classList.toggle('markdown-mode', this.isMarkdownMode);
+        markdownToggle.classList.toggle('active', this.isMarkdownMode);
+
+        if (this.isMarkdownMode) {
+            // Convert content to Markdown
+            const html = this.editor.innerHTML;
+            const turndownService = new TurndownService({
+                headingStyle: 'atx',
+                codeBlockStyle: 'fenced'
+            });
+            const markdown = turndownService.turndown(html);
+            this.editor.innerHTML = `<pre><code>${markdown}</code></pre>`;
+        } else {
+            // Convert back to HTML
+            const markdown = this.editor.querySelector('code').textContent;
+            const converter = new showdown.Converter({
+                simpleLineBreaks: true,
+                tables: true
+            });
+            this.editor.innerHTML = converter.makeHtml(markdown);
+        }
+
+        this.handleEditorChange();
     }
 
     setupToolbar() {
@@ -290,6 +349,58 @@ class DocumentEditor {
         // Format tracking
         this.editor.addEventListener('keyup', () => this.updateActiveFormats());
         this.editor.addEventListener('mouseup', () => this.updateActiveFormats());
+
+        // Add export handlers
+        const exportBtn = document.getElementById('exportBtn');
+        const exportDropdown = document.getElementById('exportDropdown');
+        
+        exportBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exportDropdown.classList.toggle('show');
+        });
+
+        exportDropdown.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (e.target.tagName === 'A') {
+                const format = e.target.dataset.format;
+                const title = document.getElementById('docTitle').value || 'Untitled Document';
+                const content = this.editor.innerHTML;
+                
+                try {
+                    switch (format) {
+                        case 'pdf':
+                            await this.exporter.exportToPDF(content, title);
+                            break;
+                        case 'word':
+                            this.exporter.exportToWord(content);
+                            break;
+                        case 'markdown':
+                            this.exporter.exportToMarkdown(content);
+                            break;
+                        case 'rtf':
+                            this.exporter.exportToRTF(content);
+                            break;
+                        case 'html':
+                            this.exporter.exportToHTML(content);
+                            break;
+                        case 'txt':
+                            this.exporter.exportToPlainText(content);
+                            break;
+                    }
+                    notifications.success('Export Complete', `Document exported as ${format.toUpperCase()}`);
+                } catch (error) {
+                    console.error('Export error:', error);
+                    notifications.error('Export Failed', `Could not export as ${format.toUpperCase()}`);
+                }
+            }
+        });
+
+        // Close export dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!exportDropdown.contains(e.target) && !exportBtn.contains(e.target)) {
+                exportDropdown.classList.remove('show');
+            }
+        });
     }
 
     updateActiveFormats() {
@@ -312,56 +423,180 @@ class DocumentEditor {
         auth.onAuthStateChanged(user => {
             if (user) {
                 this.currentUser = user;
+                localStorage.setItem('user', JSON.stringify(user));
                 this.updateUserInterface();
             } else {
+                localStorage.removeItem('user');
                 window.location.href = 'index.html';
             }
         });
     }
 
+    storeCursorPosition() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return null;
+
+        const range = selection.getRangeAt(0);
+        const preSelectionRange = range.cloneRange();
+        preSelectionRange.selectNodeContents(this.editor);
+        preSelectionRange.setEnd(range.startContainer, range.startOffset);
+        const start = preSelectionRange.toString().length;
+
+        return {
+            start,
+            end: start + range.toString().length,
+            scrollTop: this.editor.scrollTop,
+            scrollLeft: this.editor.scrollLeft
+        };
+    }
+
+    restoreCursorPosition(savedSelection) {
+        if (!savedSelection) return;
+
+        const charIndex = (containerEl, index) => {
+            let currentIndex = 0;
+            const walk = document.createTreeWalker(
+                containerEl,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+
+            let node;
+            while ((node = walk.nextNode())) {
+                const length = node.textContent.length;
+                if (currentIndex + length >= index) {
+                    return [node, index - currentIndex];
+                }
+                currentIndex += length;
+            }
+            return [null, 0];
+        };
+
+        // Restore scroll position first
+        this.editor.scrollTop = savedSelection.scrollTop;
+        this.editor.scrollLeft = savedSelection.scrollLeft;
+
+        const selection = window.getSelection();
+        const [startNode, startOffset] = charIndex(this.editor, savedSelection.start);
+        
+        if (startNode) {
+            const range = document.createRange();
+            range.setStart(startNode, startOffset);
+            
+            if (savedSelection.start !== savedSelection.end) {
+                const [endNode, endOffset] = charIndex(this.editor, savedSelection.end);
+                if (endNode) {
+                    range.setEnd(endNode, endOffset);
+                }
+            } else {
+                range.collapse(true);
+            }
+
+            selection.removeAllRanges();
+            selection.addRange(range);
+            startNode.parentElement?.scrollIntoView({ block: 'nearest' });
+        }
+    }
+
     async handleEditorChange() {
         clearTimeout(this.saveTimeout);
-        this.saveEditorState();
         
         const saveStatus = document.getElementById('saveStatus');
         saveStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
         
-        this.saveTimeout = setTimeout(async () => {
-            await this.saveDocument();
-        }, 2000);
+        // Store cursor position before save
+        const cursorPosition = this.storeCursorPosition();
+        
+        // Queue the save with throttling
+        this.queueSave(cursorPosition);
 
         // Remove preview mode if it exists
         this.editor.classList.remove('preview-mode');
     }
 
-    async saveDocument() {
+    queueSave(cursorPosition) {
+        // If there's already a pending save, update its content
+        if (this.pendingSave) {
+            this.pendingSave.content = this.editor.innerHTML;
+            return;
+        }
+
+        const timeSinceLastSave = Date.now() - this.lastSaveTime;
+        const delay = Math.max(0, this.MIN_SAVE_INTERVAL - timeSinceLastSave);
+
+        this.saveTimeout = setTimeout(async () => {
+            this.pendingSave = {
+                content: this.editor.innerHTML,
+                cursorPosition
+            };
+
+            try {
+                await this.saveDocument(this.pendingSave);
+                this.lastSaveTime = Date.now();
+            } finally {
+                this.pendingSave = null;
+            }
+        }, delay);
+    }
+
+    async saveDocument({content, cursorPosition}) {
         if (!this.currentUser || !this.currentDocId) return;
 
         try {
-            const content = this.editor.innerHTML;
             const now = new Date();
             const docRef = doc(db, 'documents', this.currentDocId);
             const pages = this.editor.querySelectorAll('.page').length;
             
+            // If in markdown mode, save the markdown content
+            const contentToSave = this.isMarkdownMode ? 
+                this.editor.querySelector('code').textContent :
+                content;
+
+            // Batch write to reduce operations
             await setDoc(docRef, {
-                content,
+                content: contentToSave,
+                isMarkdown: this.isMarkdownMode,
                 pages,
                 lastModified: now.toISOString(),
                 userId: this.currentUser.uid
             }, { merge: true });
 
-            await this.manageRevisions(content, now);
-
-            // Update only the save status indicator
+            // Update save status indicator
             const saveStatus = document.getElementById('saveStatus');
             saveStatus.innerHTML = '<i class="fas fa-check"></i> Saved';
             this.lastSaveTime = now;
+
+            // Handle revisions less frequently
+            const timeSinceLastRevision = this.lastRevisionTime ? 
+                now - this.lastRevisionTime : 
+                Infinity;
+
+            if (timeSinceLastRevision > 5 * 60 * 1000) { // 5 minutes
+                await this.manageRevisions(content, now);
+                this.lastRevisionTime = now;
+            }
             
-            this.restoreEditorState();
+            // Restore cursor position after save
+            this.restoreCursorPosition(cursorPosition);
+            this.editor.focus();
+
         } catch (error) {
-            const saveStatus = document.getElementById('saveStatus');
-            saveStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error saving';
-            notifications.error('Save Failed', 'Could not save the document', ERROR_CODES.SAVE_ERROR);
+            if (error.code === 'resource-exhausted') {
+                // Handle quota exceeded error
+                const saveStatus = document.getElementById('saveStatus');
+                saveStatus.innerHTML = '<i class="fas fa-clock"></i> Retrying save...';
+                
+                // Retry after longer delay
+                setTimeout(() => {
+                    this.queueSave({content, cursorPosition});
+                }, this.MIN_SAVE_INTERVAL * 2);
+            } else {
+                const saveStatus = document.getElementById('saveStatus');
+                saveStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error saving';
+                console.error('Save error:', error);
+                notifications.error('Save Failed', 'Could not save the document', ERROR_CODES.SAVE_ERROR);
+            }
         }
     }
 
