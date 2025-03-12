@@ -40,7 +40,7 @@
         <div class="version-banner">
             <div class="banner-content">
                 <span class="version-tag">New</span>
-                <span class="banner-text">Nova Docs 5.2 is here! Check out all the new features</span>
+                <span class="banner-text">Nova Docs 5.5.0 brings PDF import, Markdown support, and more!</span>
                 <a href="changelog.html" class="banner-link">Learn More →</a>
             </div>
             <button class="banner-close" id="closeBanner">×</button>
@@ -108,6 +108,20 @@
                             <i class="fas fa-list"></i>
                         </button>
                     </div>
+                    <div class="document-actions">
+                        <button id="uploadPdfBtn" class="secondary-button">
+                            <i class="fas fa-file-pdf"></i>
+                            Import PDF
+                        </button>
+                        <input type="file" id="pdfFileInput" accept=".pdf" style="display: none;">
+                    </div>
+                </div>
+
+                <div id="dropZone" class="pdf-drop-zone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-pdf"></i>
+                        <p>Drop PDF here to convert</p>
+                    </div>
                 </div>
 
                 <div class="documents-grid" id="documentsGrid">
@@ -116,10 +130,28 @@
             </div>
         </main>
 
+        <!-- Context Menu -->
+        <div id="documentContextMenu" class="context-menu">
+            <button data-action="rename">
+                <i class="fas fa-edit"></i>
+                Rename
+            </button>
+            <button data-action="duplicate">
+                <i class="fas fa-copy"></i>
+                Make a Copy
+            </button>
+            <hr>
+            <button data-action="trash" class="danger">
+                <i class="fas fa-trash"></i>
+                Move to Trash
+            </button>
+        </div>
+
         <!-- Notifications Container -->
         <div class="notifications-container" id="notifications"></div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="documents.js"></script>
     <script src="notifications.js"></script>

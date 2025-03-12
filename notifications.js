@@ -81,6 +81,33 @@ class NotificationSystem {
     info(title, message, duration) {
         return this.show({ type: 'info', title, message, duration });
     }
+
+    getIcon(type) {
+        const icons = {
+            success: '<i class="fas fa-check-circle"></i>',
+            error: '<i class="fas fa-exclamation-circle"></i>',
+            warning: '<i class="fas fa-exclamation-triangle"></i>',
+            info: '<i class="fas fa-info-circle"></i>'
+        };
+        return icons[type] || icons.info;
+    }
+
+    minimal(type, title, message) {
+        const notification = document.createElement('div');
+        notification.className = `notification minimal ${type}`;
+        notification.dataset.tooltip = `${title}: ${message}`;
+
+        const icon = document.createElement('div');
+        icon.className = 'notification-icon';
+        icon.innerHTML = this.getIcon(type);
+        
+        notification.appendChild(icon);
+
+        this.container.appendChild(notification);
+        setTimeout(() => {
+            notification.remove();
+        }, 2000);
+    }
 }
 
 const notifications = new NotificationSystem();

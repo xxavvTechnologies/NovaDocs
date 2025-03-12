@@ -11,6 +11,7 @@ import {
     where,
     orderBy
 } from './firebase-config.js';
+import PDFConverter from './pdf-converter.js';
 
 class DocumentManager {
     constructor() {
@@ -28,6 +29,12 @@ class DocumentManager {
         this.currentView = 'grid';
         this.documents = [];
         
+        this.pdfConverter = new PDFConverter();
+        this.setupPDFHandling();
+        
+        this.contextMenu = document.getElementById('documentContextMenu');
+        this.selectedDocId = null;
+
         this.init();
     }
 
@@ -120,7 +127,7 @@ class DocumentManager {
                 container.classList.add('no-banner');
                 
                 // Store in localStorage to prevent showing again
-                localStorage.setItem('novadocs_banner_5_0', 'dismissed');
+                localStorage.setItem('novadocs_banner_5_5.0', 'dismissed');
                 
                 // Remove from DOM after animation
                 setTimeout(() => banner.remove(), 300);
@@ -136,6 +143,88 @@ class DocumentManager {
                 banner.remove();
                 container.classList.add('no-banner');
             }
+        }
+
+        // Add context menu handling
+        document.addEventListener('click', () => this.hideContextMenu());
+        document.addEventListener('contextmenu', (e) => {
+            const docCard = e.target.closest('.document-card');
+            if (!docCard) {
+                this.hideContextMenu();
+                return;
+            }
+            
+            e.preventDefault();
+            this.selectedDocId = docCard.dataset.docId;
+            this.showContextMenu(e.pageX, e.pageY);
+        });
+
+        this.contextMenu.addEventListener('click', (e) => {
+            const action = e.target.closest('button')?.dataset.action;
+            if (!action) return;
+
+            this.handleContextMenuAction(action);
+        });
+    }
+
+    setupPDFHandling() {
+        const uploadBtn = document.getElementById('uploadPdfBtn');
+        const fileInput = document.getElementById('pdfFileInput');
+        const dropZone = document.getElementById('dropZone');
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => this.handlePDFUpload(e.target.files[0]));
+
+        // Setup drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            const file = e.dataTransfer.files[0];
+            if (file.type === 'application/pdf') {
+                this.handlePDFUpload(file);
+            } else {
+                notifications.error('Invalid File', 'Please upload a PDF file');
+            }
+        });
+    }
+
+    async handlePDFUpload(file) {
+        try {
+            notifications.info('Converting PDF', 'Please wait while we convert your PDF...');
+            
+            // Convert PDF to document format
+            const content = await this.pdfConverter.convertToDocument(file);
+            
+            // Create new document
+            const newDoc = {
+                title: file.name.replace('.pdf', ''),
+                content: content,
+                userId: this.currentUser.uid,
+                createdAt: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
+                originalFormat: 'pdf'
+            };
+
+            const docRef = doc(collection(db, 'documents'));
+            await setDoc(docRef, newDoc);
+            
+            notifications.success('PDF Converted', 'Your PDF has been converted to an editable document');
+            
+            // Redirect to editor
+            window.location.href = `editor.html?id=${docRef.id}`;
+
+        } catch (error) {
+            console.error('PDF conversion failed:', error);
+            notifications.error('Conversion Failed', 'Could not convert PDF file');
         }
     }
 
@@ -280,7 +369,7 @@ class DocumentManager {
         this.documentsGrid.className = this.currentView === 'grid' ? 'documents-grid' : 'documents-list';
         
         this.documentsGrid.innerHTML = filteredDocs.map(doc => `
-            <div class="document-card" onclick="window.location.href='editor.html?id=${doc.id}'">
+            <div class="document-card" data-doc-id="${doc.id}" onclick="window.location.href='editor.html?id=${doc.id}'">
                 <div class="document-icon">
                     <i class="far fa-file-alt"></i>
                 </div>
@@ -453,6 +542,99 @@ class DocumentManager {
                 console.error('Error deleting document:', error);
                 notifications.error('Action Failed', 'Could not delete document');
             }
+        }
+    }
+
+    showContextMenu(x, y) {
+        this.contextMenu.style.display = 'block';
+        
+        // Adjust position to keep menu in viewport
+        const rect = this.contextMenu.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        if (x + rect.width > viewportWidth) {
+            x = viewportWidth - rect.width;
+        }
+
+        if (y + rect.height > viewportHeight) {
+            y = viewportHeight - rect.height;
+        }
+
+        this.contextMenu.style.left = x + 'px';
+        this.contextMenu.style.top = y + 'px';
+    }
+
+    hideContextMenu() {
+        this.contextMenu.style.display = 'none';
+        this.selectedDocId = null;
+    }
+
+    async handleContextMenuAction(action) {
+        if (!this.selectedDocId) return;
+
+        switch (action) {
+            case 'rename':
+                await this.renameDocument(this.selectedDocId);
+                break;
+            case 'duplicate':
+                await this.duplicateDocument(this.selectedDocId);
+                break;
+            case 'trash':
+                await this.moveToTrash(this.selectedDocId);
+                break;
+        }
+
+        this.hideContextMenu();
+    }
+
+    async renameDocument(docId) {
+        const doc = this.documents.find(d => d.id === docId);
+        if (!doc) return;
+
+        const newTitle = prompt('Enter new document name:', doc.title || 'Untitled Document');
+        if (!newTitle) return;
+
+        try {
+            const docRef = doc(db, 'documents', docId);
+            await setDoc(docRef, {
+                title: newTitle,
+                lastModified: new Date().toISOString()
+            }, { merge: true });
+
+            await this.loadDocuments();
+            notifications.success('Renamed', 'Document renamed successfully');
+        } catch (error) {
+            console.error('Error renaming document:', error);
+            notifications.error('Rename Failed', 'Could not rename document');
+        }
+    }
+
+    async duplicateDocument(docId) {
+        const originalDoc = this.documents.find(d => d.id === docId);
+        if (!originalDoc) return;
+
+        try {
+            const newDoc = {
+                ...originalDoc,
+                title: `Copy of ${originalDoc.title || 'Untitled Document'}`,
+                userId: this.currentUser.uid,
+                createdAt: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
+                isPublic: false,
+                sharedWith: []
+            };
+
+            delete newDoc.id;
+
+            const docRef = doc(collection(db, 'documents'));
+            await setDoc(docRef, newDoc);
+
+            await this.loadDocuments();
+            notifications.success('Duplicated', 'Document copied successfully');
+        } catch (error) {
+            console.error('Error duplicating document:', error);
+            notifications.error('Duplication Failed', 'Could not copy document');
         }
     }
 }

@@ -9,7 +9,8 @@ import {
     createUserWithEmailAndPassword,
     sendPasswordResetEmail,
     setPersistence,
-    browserLocalPersistence
+    browserLocalPersistence,
+    onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
 class LoginManager {
@@ -22,7 +23,11 @@ class LoginManager {
         this.isSignup = false;
 
         this.attachEventListeners();
-        this.setupPersistence();
+        this.init();
+    }
+
+    async init() {
+        await this.setupPersistence();
         this.checkAuthState();
     }
 
@@ -114,9 +119,15 @@ class LoginManager {
     }
 
     checkAuthState() {
-        auth.onAuthStateChanged((user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User is already signed in, redirect to documents page
+                // Store minimal user data for other pages
+                sessionStorage.setItem('auth_user', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL
+                }));
                 window.location.href = 'documents.html';
             }
         });

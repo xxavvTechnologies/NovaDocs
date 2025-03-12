@@ -1,0 +1,600 @@
+.reading-stats.active {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Comment Highlight */
+.commented-text {
+    background: rgba(255, 213, 79, 0.3);
+    border-bottom: 2px solid #ffd54f;
+}
+
+/* Suggestion Mode */
+.suggestion {
+    background: rgba(46, 204, 113, 0.1);
+    border-bottom: 2px solid #2ecc71;
+    position: relative;
+}
+
+.suggestion.deleted {
+    background: rgba(231, 76, 60, 0.1);
+    text-decoration: line-through;
+    border-bottom: 2px solid #e74c3c;
+}
+
+/* Keyboard Shortcuts Dialog */
+.shortcuts-dialog {
+    max-width: 600px;
+}
+
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+}
+
+.shortcut-key {
+    background: var(--background);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.9rem;
+}
+
+/* Tools Submenu Styling */
+.tools-submenu {
+    width: 280px;
+}
+
+.tools-submenu .submenu-content {
+    padding: 0.5rem;
+}
+
+.submenu-section {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.submenu-section:last-child {
+    border-bottom: none;
+}
+
+.submenu-section h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--secondary);
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+.tools-submenu button {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text);
+    font-size: var(--dropdown-text-size);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.tools-submenu button:hover {
+    background: var(--hover-gradient);
+    color: var(--primary);
+}
+
+.tools-submenu button i {
+    width: 1.2rem;
+    text-align: center;
+}
+
+.tools-submenu button.active {
+    background: var(--primary);
+    color: white;
+}
+
+/* Position submenu */
+#tools-menu {
+    right: 0;
+    left: auto;
+}
+
+/* Add these styles to your existing CSS */
+
+.share-options {
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.share-option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.share-option label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.share-emails {
+    margin-left: 1.5rem;
+}
+
+.share-emails input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.share-link {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: var(--background);
+    border-radius: 4px;
+}
+
+.share-link input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: var(--surface);
+}
+
+.share-link button {
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.share-link button:hover {
+    background: var(--primary-dark);
+}
+
+/* Add styles for the new elements */
+
+.document-title {
+    flex: 1;
+    margin: 0 2rem;
+}
+
+.title-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.5rem;
+    font-size: 1.1rem;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text);
+}
+
+.title-input:hover {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+.title-input:focus {
+    background: var(--surface);
+    border-color: var(--primary);
+    outline: none;
+}
+
+.shared-users {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.shared-users h4 {
+    color: var(--secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.shared-users-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.shared-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--background);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.shared-user img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.shared-user button {
+    border: none;
+    background: none;
+    color: var(--secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    margin-left: 0.25rem;
+}
+
+.shared-user button:hover {
+    color: var(--error);
+}
+
+/* Page styles */
+.page {
+    min-height: 1056px; /* 11 inches at 96dpi */
+    width: var(--page-width);
+    padding: 96px; /* 1 inch margins */
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin: 2rem auto;
+    position: relative;
+    box-sizing: border-box;
+    font-family: 'Times New Roman', Times, serif; /* Default font */
+}
+
+.page::after {
+    content: attr(data-page);
+    position: absolute;
+    bottom: 48px;
+    right: 48px;
+    font-size: 0.8rem;
+    color: var(--secondary);
+}
+
+.page + .page {
+    margin-top: 3rem;
+}
+
+.page[style*="font-family"] {
+    /* Honor explicitly set fonts */
+    font-family: inherit;
+}
+
+/* Update font handling for specific elements */
+.page span[style*="font-family"],
+.page p[style*="font-family"],
+.page div[style*="font-family"] {
+    font-family: inherit !important;
+}
+
+/* Status bar page indicator */
+.page-indicator {
+    margin-right: auto;
+    padding-left: 1rem;
+    color: var(--secondary);
+    font-size: 0.85rem;
+}
+
+/* Font preview in select dropdown */
+#fontSelect option {
+    font-size: 16px;
+    padding: 8px;
+}
+
+#fontSelect option[value="Times New Roman"] { font-family: "Times New Roman", Times, serif; }
+#fontSelect option[value="Arial"] { font-family: Arial, "Helvetica Neue", sans-serif; }
+#fontSelect option[value="Georgia"] { font-family: Georgia, serif; }
+#fontSelect option[value="Lora"] { font-family: "Lora", Georgia, serif; }
+#fontSelect option[value="Merriweather"] { font-family: "Merriweather", Georgia, serif; }
+#fontSelect option[value="Inter"] { font-family: "Inter", system-ui, sans-serif; }
+#fontSelect option[value="Roboto Mono"] { font-family: "Roboto Mono", monospace; }
+
+/* Custom font loading indicator */
+@keyframes fontLoading {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.font-loading {
+    animation: fontLoading 0.5s ease infinite alternate;
+}
+
+/* Add styles for the history dialog */
+.revision-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 1rem 0;
+}
+
+.revision-item {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.revision-item:hover {
+    background: var(--background);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.revision-item.selected {
+    border-color: var(--primary);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.revision-time {
+    color: var(--secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.revision-type {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.revision-type.original {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.revision-type.auto {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.revision-preview {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    max-height: 100px;
+    overflow: hidden;
+    position: relative;
+}
+
+.revision-preview::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(transparent, white);
+}
+
+/* Add these styles */
+
+.sidebar-panel {
+    position: fixed;
+    top: calc(var(--top-header-height) + var(--header-height));
+    right: 0;
+    width: 350px;
+    height: calc(100vh - var(--top-header-height) - var(--header-height));
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 99;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-panel.active {
+    transform: translateX(0);
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface-gradient);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: var(--secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.close-button:hover {
+    background: var(--background);
+    color: var(--primary);
+}
+
+.revision-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.revision-item {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.revision-item:hover {
+    background: var(--background);
+    transform: translateY(-1px);
+    box-shadow: var(--card-shadow);
+}
+
+.revision-item.selected {
+    border-color: var(--primary);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface-gradient);
+}
+
+.primary-button {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.primary-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+/* Add preview mode styles */
+#editor.preview-mode {
+    position: relative;
+}
+
+#editor.preview-mode::before {
+    content: 'Preview Mode';
+    position: fixed;
+    top: calc(var(--top-header-height) + var(--header-height) + 1rem);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#embedContainer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.embed-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.embed-code-container {
+    position: relative;
+}
+
+#embedCode {
+    width: 100%;
+    height: 80px;
+    padding: 0.5rem;
+    border: 1px solid var (--border);
+    border-radius: 4px;
+    font-family: monospace;
+    resize: none;
+    margin-bottom: 0.5rem;
+}
+
+#copyEmbed {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+}
+
+/* Embed mode styles */
+.embed-mode {
+    background: transparent;
+}
+
+/* Export dropdown styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+#exportDropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    min-width: 180px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+#exportDropdown.show {
+    display: block;
+    animation: fadeIn 0.2s ease-out;
+}
+
+#exportDropdown a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+#exportDropdown a:hover {
+    background: var(--hover-gradient);
+}
+
+#clearFormatBtn {
+    color: var(--error);
+}
+
+#clearFormatBtn:hover {
+    background: rgba(239, 68, 68, 0.1);
+}

@@ -15,53 +15,83 @@ import {
 
 class DocumentEditor {
     constructor() {
-        this.init();
-        // Add these properties at the start of constructor
         this.pendingSave = null;
         this.lastSaveTime = Date.now();
-        this.MIN_SAVE_INTERVAL = 10000; // Minimum 10 seconds between saves
+        this.MIN_SAVE_INTERVAL = 3000; // Reduced from 10000 to 3000ms
+        this.batchTimeout = null;
+        this.pendingChanges = [];
+        this.lastRevisionTime = Date.now();
         this.exporter = new DocumentExporter();
+        this.editor = null;
+        this.isMarkdownMode = false; // Add this line
+        this.init();
     }
 
     async init() {
         try {
-            // Check for cached credentials first
-            const cachedUser = localStorage.getItem('user');
-            if (cachedUser) {
-                this.currentUser = JSON.parse(cachedUser);
+            // Wait for DOM to be ready
+            if (document.readyState === 'loading') {
+                await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
             }
-
-            // Check auth state
-            const user = auth.currentUser;
-            if (!user) {
-                // If no current user, wait briefly for auth to initialize
-                await new Promise(resolve => {
-                    const unsubscribe = auth.onAuthStateChanged(user => {
-                        if (user) {
-                            // Cache user data
-                            localStorage.setItem('user', JSON.stringify(user));
-                            this.currentUser = user;
-                        }
-                        unsubscribe();
-                        resolve(user);
-                    });
-                    // Timeout after 2 seconds
-                    setTimeout(() => resolve(null), 2000);
-                });
+            
+            // Get editor element and verify it exists
+            this.editor = document.getElementById('editor');
+            if (!this.editor) {
+                throw new Error('Editor element not found');
             }
-
-            if (!this.currentUser) {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            // Initialize editor only if authenticated
+            
             await this.setupEditor();
             await this.loadDocumentFromUrl();
         } catch (error) {
-            console.error('Auth check failed:', error);
-            window.location.href = 'index.html';
+            console.error('Editor initialization failed:', error);
+            // Optionally show error to user
+            if (window.notifications) {
+                notifications.error('Initialization Failed', 'Could not initialize editor');
+            }
         }
+    }
+
+    setupEditor() {
+        return new Promise((resolve) => {
+            // Initialize core properties
+            this.currentUser = null;
+            this.currentDocId = null;
+            this.saveTimeout = null;
+            this.activeButtons = new Set();
+
+            // Wait for DOM to be ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.initializeComponents();
+                    resolve();
+                });
+            } else {
+                this.initializeComponents();
+                resolve();
+            }
+        });
+    }
+
+    initializeComponents() {
+        this.initializeEditor();
+        this.attachEventListeners();
+        this.setupAuthStateListener();
+        this.setupToolbar();
+        this.lastSaveTime = null;
+        this.originalContent = null;
+        this.sessionStartTime = new Date();
+        this.initializeShareDialog();
+        this.initializeTitleInput();
+        this.pageHeight = 1056; // 11 inches at 96dpi
+        this.setupPageManagement();
+        this.pageBreakDebounce = null;
+        this.setupFontHandling();
+        this.lastSelection = null;
+        this.lastRange = null;
+        this.lastScroll = 0;
+        this.selectionState = null;
+        this.selectedRevision = null;
+        this.initializeHistoryDialog();
     }
 
     async loadDocumentFromUrl() {
@@ -130,33 +160,6 @@ class DocumentEditor {
         document.title = `${title} - Nova Docs`;
     }
 
-    setupEditor() {
-        this.editor = document.getElementById('editor');
-        this.currentUser = auth.currentUser;
-        this.currentDocId = null;
-        this.saveTimeout = null;
-        this.activeButtons = new Set();
-        this.initializeEditor();
-        this.attachEventListeners();
-        this.setupAuthStateListener();
-        this.setupToolbar();
-        this.lastSaveTime = null;
-        this.originalContent = null;
-        this.sessionStartTime = new Date();
-        this.initializeShareDialog();
-        this.initializeTitleInput();
-        this.pageHeight = 1056; // 11 inches at 96dpi
-        this.setupPageManagement();
-        this.pageBreakDebounce = null;
-        this.setupFontHandling();
-        this.lastSelection = null;
-        this.lastRange = null;
-        this.lastScroll = 0;
-        this.selectionState = null;
-        this.selectedRevision = null;
-        this.initializeHistoryDialog();
-    }
-
     saveSelection() {
         const selection = window.getSelection();
         if (selection.rangeCount > 0) {
@@ -203,30 +206,133 @@ class DocumentEditor {
     }
 
     initializeEditor() {
-        this.editor.addEventListener('input', () => {
-            this.handleEditorChange();
-            this.updateWordCount();
-        });
+        // Check if editor exists before initializing
+        if (!this.editor) {
+            throw new Error('Editor element not found during initialization');
+        }
 
-        // Initialize toolbar buttons
-        document.querySelectorAll('.toolbar button').forEach(button => {
-            button.addEventListener('click', (e) => this.handleToolbarAction(e));
-        });
+        try {
+            // Add input event listeners with Markdown handling
+            this.editor.addEventListener('input', (e) => {
+                this.handleEditorChange();
+                this.updateWordCount();
+                this.handleMarkdownConversion(e);
+            });
 
-        // Initialize dropdowns
-        document.getElementById('fontSelect').addEventListener('change', (e) => {
-            this.execCommand('fontName', e.target.value);
-        });
+            // Initialize toolbar buttons if they exist
+            const toolbarButtons = document.querySelectorAll('.toolbar button');
+            if (toolbarButtons.length > 0) {
+                toolbarButtons.forEach(button => {
+                    button.addEventListener('click', (e) => this.handleToolbarAction(e));
+                });
+            }
 
-        document.getElementById('fontSize').addEventListener('change', (e) => {
-            this.execCommand('fontSize', e.target.value);
-        });
+            // Initialize font select if it exists
+            const fontSelect = document.getElementById('fontSelect');
+            if (fontSelect) {
+                fontSelect.addEventListener('change', (e) => {
+                    this.execCommand('fontName', e.target.value);
+                });
+            }
 
-        // Add Markdown mode toggle
-        const markdownToggle = document.getElementById('markdownToggle');
-        markdownToggle.addEventListener('click', () => this.toggleMarkdownMode());
+            // Initialize font size if it exists
+            const fontSize = document.getElementById('fontSize');
+            if (fontSize) {
+                fontSize.addEventListener('change', (e) => {
+                    this.execCommand('fontSize', e.target.value);
+                });
+            }
 
-        this.isMarkdownMode = false;
+            // Add Markdown mode toggle if it exists
+            const markdownToggle = document.getElementById('markdownToggle');
+            if (markdownToggle) {
+                markdownToggle.addEventListener('click', () => this.toggleMarkdownMode());
+                this.isMarkdownMode = false;
+            }
+
+        } catch (error) {
+            console.error('Error initializing editor components:', error);
+            throw error;
+        }
+    }
+
+    handleMarkdownConversion(e) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        const currentNode = range.startContainer;
+        
+        if (currentNode.nodeType !== 3) return; // Only process text nodes
+        
+        const text = currentNode.textContent;
+        const patterns = [
+            { regex: /\*\*(.+?)\*\*$/, format: 'bold' },
+            { regex: /\_\_(.+?)\_\_$/, format: 'bold' },
+            { regex: /\*(.+?)\*$/, format: 'italic' },
+            { regex: /\_(.+?)\_$/, format: 'italic' },
+            { regex: /\~\~(.+?)\~\~$/, format: 'strike' },
+            { regex: /\`(.+?)\`$/, format: 'code' },
+            { regex: /^\# (.+)$/, format: 'h1' },
+            { regex: /^\#\# (.+)$/, format: 'h2' },
+            { regex: /^\#\#\# (.+)$/, format: 'h3' }
+        ];
+
+        for (const pattern of patterns) {
+            const match = text.match(pattern.regex);
+            if (match) {
+                e.preventDefault();
+                const content = match[1];
+                const parentBlock = currentNode.parentElement;
+
+                // Create a new text node with the content
+                const newText = document.createTextNode(content);
+
+                // Apply the formatting
+                if (['h1', 'h2', 'h3'].includes(pattern.format)) {
+                    const header = document.createElement(pattern.format);
+                    header.appendChild(newText);
+                    parentBlock.parentElement.replaceChild(header, parentBlock);
+                } else if (pattern.format === 'code') {
+                    const code = document.createElement('code');
+                    code.appendChild(newText);
+                    code.style.fontFamily = 'Roboto Mono, monospace';
+                    code.style.backgroundColor = '#f1f5f9';
+                    code.style.padding = '0.2em 0.4em';
+                    code.style.borderRadius = '3px';
+                    parentBlock.replaceChild(code, currentNode);
+                } else {
+                    // For basic text formatting (bold, italic, strike)
+                    const formattedSpan = document.createElement('span');
+                    formattedSpan.appendChild(newText);
+                    switch (pattern.format) {
+                        case 'bold':
+                            formattedSpan.style.fontWeight = 'bold';
+                            break;
+                        case 'italic':
+                            formattedSpan.style.fontStyle = 'italic';
+                            break;
+                        case 'strike':
+                            formattedSpan.style.textDecoration = 'line-through';
+                            break;
+                    }
+                    parentBlock.replaceChild(formattedSpan, currentNode);
+                }
+
+                // Show a subtle notification
+                notifications.minimal('success', 
+                    `Markdown ${pattern.format} formatting applied`, 
+                    'Converted Markdown to rich text');
+
+                // Set cursor position after the formatted text
+                const newRange = document.createRange();
+                newRange.setStartAfter(newText);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+                break;
+            }
+        }
     }
 
     toggleMarkdownMode() {
@@ -265,11 +371,22 @@ class DocumentEditor {
         formatButtons.forEach(format => {
             const button = document.getElementById(`${format}Btn`);
             button.addEventListener('mousedown', (e) => {
-                e.preventDefault(); // Prevent losing selection
-                this.toggleFormat(format);
-                this.updateActiveFormats();
+                e.preventDefault();
+                this.applyFormat(format);
             });
         });
+
+        // Color pickers
+        const textColorBtn = document.getElementById('textColorBtn');
+        const highlightBtn = document.getElementById('highlightBtn');
+
+        textColorBtn.addEventListener('input', (e) => this.applyFormat('textColor', e.target.value));
+        textColorBtn.addEventListener('change', (e) => this.applyFormat('textColor', e.target.value));
+        highlightBtn.addEventListener('input', (e) => this.applyFormat('highlight', e.target.value));
+        highlightBtn.addEventListener('change', (e) => this.applyFormat('highlight', e.target.value));
+
+        // Clear formatting
+        document.getElementById('clearFormatBtn').addEventListener('click', () => this.clearFormatting());
 
         // Alignment buttons
         const alignButtons = ['alignLeft', 'alignCenter', 'alignRight', 'alignJustify'];
@@ -284,49 +401,137 @@ class DocumentEditor {
         });
     }
 
-    toggleFormat(format) {
-        const button = document.getElementById(`${format}Btn`);
-        const isActive = document.queryCommandState(format);
-        
-        // Save current font family before applying format
+    applyFormat(format, value = null) {
+        this.saveSelection();
         const selection = window.getSelection();
-        let currentFont = null;
         
+        if (!selection.rangeCount) {
+            this.restoreSelection();
+            return;
+        }
+
+        try {
+            document.execCommand('styleWithCSS', false, true);
+            
+            switch (format) {
+                case 'textColor':
+                    document.execCommand('foreColor', false, value);
+                    break;
+                case 'highlight':
+                    document.execCommand('hiliteColor', false, value);
+                    break;
+                case 'bold':
+                    document.execCommand('bold', false, null);
+                    break;
+                case 'italic':
+                    document.execCommand('italic', false, null);
+                    break;
+                case 'underline':
+                    document.execCommand('underline', false, null);
+                    break;
+                case 'strike':
+                    document.execCommand('strikethrough', false, null);
+                    break;
+            }
+
+            this.cleanupFormatting(selection.getRangeAt(0).commonAncestorContainer);
+            this.updateActiveFormats();
+
+        } catch (e) {
+            console.error('Format application error:', e);
+        }
+
+        this.editor.focus();
+        this.restoreSelection();
+    }
+
+    clearFormatting() {
+        this.saveSelection();
+        document.execCommand('removeFormat', false, null);
+        
+        // Also remove any span elements that might have formatting
+        const selection = window.getSelection();
         if (selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
             const container = range.commonAncestorContainer;
-            const parentElement = container.nodeType === 3 ? container.parentElement : container;
+            const element = container.nodeType === 3 ? container.parentElement : container;
             
-            if (parentElement && this.editor.contains(parentElement)) {
-                currentFont = window.getComputedStyle(parentElement).fontFamily;
+            if (element) {
+                const spans = element.getElementsByTagName('span');
+                Array.from(spans).forEach(span => {
+                    const text = document.createTextNode(span.textContent);
+                    span.parentNode.replaceChild(text, span);
+                });
             }
         }
 
-        document.execCommand('styleWithCSS', false, true);
-        document.execCommand(format, false, null);
-
-        // Re-apply font if needed
-        if (currentFont) {
-            const newSelection = window.getSelection();
-            if (newSelection.rangeCount > 0) {
-                const newRange = newSelection.getRangeAt(0);
-                const newContainer = newRange.commonAncestorContainer;
-                const newParent = newContainer.nodeType === 3 ? newContainer.parentElement : newContainer;
-                
-                if (newParent && newParent.tagName === 'SPAN') {
-                    newParent.style.fontFamily = currentFont;
-                }
-            }
-        }
-
-        button.classList.toggle('active', !isActive);
         this.editor.focus();
+        this.restoreSelection();
+        this.updateActiveFormats();
     }
 
-    setAlignment(align) {
-        const command = 'justify' + align.replace('align', '').toLowerCase();
-        document.execCommand(command, false, null);
-        this.editor.focus();
+    cleanupFormatting(element) {
+        if (!element) return;
+
+        const root = element.nodeType === 1 ? element : element.parentElement;
+        if (!root) return;
+
+        // Merge adjacent spans with identical styles
+        const spans = root.getElementsByTagName('span');
+        Array.from(spans).forEach(span => {
+            if (span.nextSibling && span.nextSibling.nodeType === 1 && span.nextSibling.tagName === 'SPAN') {
+                const next = span.nextSibling;
+                if (span.style.cssText === next.style.cssText) {
+                    span.textContent += next.textContent;
+                    next.remove();
+                }
+            }
+        });
+
+        // Remove empty spans
+        Array.from(spans).forEach(span => {
+            if (!span.textContent.trim()) {
+                span.remove();
+            }
+        });
+    }
+
+    updateActiveFormats() {
+        const formatStates = {
+            'bold': document.queryCommandState('bold'),
+            'italic': document.queryCommandState('italic'),
+            'underline': document.queryCommandState('underline'),
+            'strike': document.queryCommandState('strikethrough')
+        };
+
+        Object.entries(formatStates).forEach(([format, state]) => {
+            const button = document.getElementById(`${format}Btn`);
+            if (button) {
+                button.classList.toggle('active', state);
+            }
+        });
+
+        // Update color buttons
+        const textColor = document.queryCommandValue('foreColor');
+        const highlightColor = document.queryCommandValue('hiliteColor');
+        
+        const textColorBtn = document.getElementById('textColorBtn');
+        const highlightBtn = document.getElementById('highlightBtn');
+
+        if (textColor && textColorBtn) textColorBtn.value = this.rgbToHex(textColor);
+        if (highlightColor && highlightBtn) highlightBtn.value = this.rgbToHex(highlightColor);
+    }
+
+    rgbToHex(rgb) {
+        // Convert rgb(r,g,b) to #rrggbb
+        const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        if (!match) return rgb;
+        
+        const r = parseInt(match[1]).toString(16).padStart(2, '0');
+        const g = parseInt(match[2]).toString(16).padStart(2, '0');
+        const b = parseInt(match[3]).toString(16).padStart(2, '0');
+        
+        return `#${r}${g}${b}`;
     }
 
     attachEventListeners() {
@@ -399,22 +604,6 @@ class DocumentEditor {
         document.addEventListener('click', (e) => {
             if (!exportDropdown.contains(e.target) && !exportBtn.contains(e.target)) {
                 exportDropdown.classList.remove('show');
-            }
-        });
-    }
-
-    updateActiveFormats() {
-        const formatStates = {
-            'bold': document.queryCommandState('bold'),
-            'italic': document.queryCommandState('italic'),
-            'underline': document.queryCommandState('underline'),
-            'strike': document.queryCommandState('strikethrough')
-        };
-
-        Object.entries(formatStates).forEach(([format, state]) => {
-            const button = document.getElementById(`${format}Btn`);
-            if (button) {
-                button.classList.toggle('active', state);
             }
         });
     }
@@ -500,101 +689,90 @@ class DocumentEditor {
     }
 
     async handleEditorChange() {
-        clearTimeout(this.saveTimeout);
-        
         const saveStatus = document.getElementById('saveStatus');
         saveStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
         
         // Store cursor position before save
         const cursorPosition = this.storeCursorPosition();
         
-        // Queue the save with throttling
-        this.queueSave(cursorPosition);
+        // Add change to pending batch
+        this.pendingChanges.push({
+            content: this.editor.innerHTML,
+            cursorPosition,
+            timestamp: Date.now()
+        });
+
+        // Clear existing batch timeout
+        clearTimeout(this.batchTimeout);
+
+        // Set new batch timeout
+        this.batchTimeout = setTimeout(() => this.processBatch(), this.MIN_SAVE_INTERVAL);
 
         // Remove preview mode if it exists
         this.editor.classList.remove('preview-mode');
     }
 
-    queueSave(cursorPosition) {
-        // If there's already a pending save, update its content
-        if (this.pendingSave) {
-            this.pendingSave.content = this.editor.innerHTML;
-            return;
+    async processBatch() {
+        if (!this.pendingChanges.length) return;
+
+        try {
+            // Get latest change from batch
+            const latestChange = this.pendingChanges[this.pendingChanges.length - 1];
+            
+            // Clear pending changes
+            this.pendingChanges = [];
+
+            await this.saveDocument(latestChange);
+
+        } catch (error) {
+            console.error('Batch save failed:', error);
+            // Retry saving with exponential backoff
+            setTimeout(() => this.processBatch(), this.MIN_SAVE_INTERVAL * 2);
         }
-
-        const timeSinceLastSave = Date.now() - this.lastSaveTime;
-        const delay = Math.max(0, this.MIN_SAVE_INTERVAL - timeSinceLastSave);
-
-        this.saveTimeout = setTimeout(async () => {
-            this.pendingSave = {
-                content: this.editor.innerHTML,
-                cursorPosition
-            };
-
-            try {
-                await this.saveDocument(this.pendingSave);
-                this.lastSaveTime = Date.now();
-            } finally {
-                this.pendingSave = null;
-            }
-        }, delay);
     }
 
-    async saveDocument({content, cursorPosition}) {
+    async saveDocument({content, cursorPosition, timestamp}) {
         if (!this.currentUser || !this.currentDocId) return;
 
         try {
             const now = new Date();
             const docRef = doc(db, 'documents', this.currentDocId);
-            const pages = this.editor.querySelectorAll('.page').length;
-            
-            // If in markdown mode, save the markdown content
-            const contentToSave = this.isMarkdownMode ? 
-                this.editor.querySelector('code').textContent :
-                content;
 
-            // Batch write to reduce operations
-            await setDoc(docRef, {
-                content: contentToSave,
-                isMarkdown: this.isMarkdownMode,
-                pages,
+            // Only save content and essential metadata
+            const docData = {
+                content: this.isMarkdownMode ? 
+                    this.editor.querySelector('code')?.textContent || content :
+                    content,
                 lastModified: now.toISOString(),
-                userId: this.currentUser.uid
-            }, { merge: true });
+            };
 
-            // Update save status indicator
+            // Save document with merge to prevent data loss
+            await setDoc(docRef, docData, { merge: true });
+
+            // Update save status
             const saveStatus = document.getElementById('saveStatus');
             saveStatus.innerHTML = '<i class="fas fa-check"></i> Saved';
             this.lastSaveTime = now;
 
-            // Handle revisions less frequently
-            const timeSinceLastRevision = this.lastRevisionTime ? 
-                now - this.lastRevisionTime : 
-                Infinity;
-
-            if (timeSinceLastRevision > 5 * 60 * 1000) { // 5 minutes
+            // Manage revisions less frequently (every 5 minutes)
+            if (now - this.lastRevisionTime > 5 * 60 * 1000) {
                 await this.manageRevisions(content, now);
                 this.lastRevisionTime = now;
             }
-            
-            // Restore cursor position after save
+
+            // Restore cursor position
             this.restoreCursorPosition(cursorPosition);
             this.editor.focus();
 
         } catch (error) {
+            // Retry on error with exponential backoff
             if (error.code === 'resource-exhausted') {
-                // Handle quota exceeded error
-                const saveStatus = document.getElementById('saveStatus');
-                saveStatus.innerHTML = '<i class="fas fa-clock"></i> Retrying save...';
-                
-                // Retry after longer delay
                 setTimeout(() => {
-                    this.queueSave({content, cursorPosition});
+                    this.processBatch();
                 }, this.MIN_SAVE_INTERVAL * 2);
             } else {
                 const saveStatus = document.getElementById('saveStatus');
                 saveStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error saving';
-                console.error('Save error:', error);
                 notifications.error('Save Failed', 'Could not save the document', ERROR_CODES.SAVE_ERROR);
             }
         }
@@ -603,40 +781,19 @@ class DocumentEditor {
     async manageRevisions(content, timestamp) {
         try {
             const revisionsRef = collection(db, 'documents', this.currentDocId, 'revisions');
-            const revisionsSnapshot = await getDocs(revisionsRef);
-            const revisions = [];
             
-            revisionsSnapshot.forEach(doc => {
-                revisions.push({ id: doc.id, ...doc.data() });
-            });
-
-            // Sort revisions by timestamp
-            revisions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-            // If this is the first save of the session, store as original
-            if (!this.originalContent) {
-                this.originalContent = content;
-                await setDoc(doc(revisionsRef, 'original'), {
-                    content,
-                    timestamp: this.sessionStartTime.toISOString(),
-                    type: 'original'
-                });
-            }
-
-            // Add new revision
-            await setDoc(doc(revisionsRef), {
+            // Only store original and last 2 recent revisions
+            const revisionData = {
                 content,
                 timestamp: timestamp.toISOString(),
-                type: 'recent'
-            });
+                type: this.originalContent ? 'recent' : 'original'
+            };
 
-            // Keep only original and last 2 recent revisions
-            const recentRevisions = revisions.filter(rev => rev.type === 'recent');
-            if (recentRevisions.length > 2) {
-                // Delete older revisions
-                for (let i = 2; i < recentRevisions.length; i++) {
-                    await deleteDoc(doc(revisionsRef, recentRevisions[i].id));
-                }
+            if (!this.originalContent) {
+                this.originalContent = content;
+                await setDoc(doc(revisionsRef, 'original'), revisionData);
+            } else {
+                await setDoc(doc(revisionsRef), revisionData);
             }
 
         } catch (error) {
@@ -808,7 +965,7 @@ class DocumentEditor {
             case 'italic':
             case 'underline':
             case 'strike':
-                this.toggleFormat(command);
+                this.applyFormat(command);
                 break;
             case 'alignleft':
             case 'aligncenter':
@@ -817,6 +974,48 @@ class DocumentEditor {
                 this.setAlignment(command);
                 break;
         }
+    }
+
+    toggleFormat(format) {
+        // Save current font family before applying format
+        const selection = window.getSelection();
+        let currentFont = null;
+        
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const container = range.commonAncestorContainer;
+            const parentElement = container.nodeType === 3 ? container.parentElement : container;
+            
+            if (parentElement && this.editor.contains(parentElement)) {
+                currentFont = window.getComputedStyle(parentElement).fontFamily;
+            }
+        }
+
+        document.execCommand('styleWithCSS', false, true);
+        document.execCommand(format, false, null);
+
+        // Re-apply font if needed
+        if (currentFont) {
+            const newSelection = window.getSelection();
+            if (newSelection.rangeCount > 0) {
+                const newRange = newSelection.getRangeAt(0);
+                const newContainer = newRange.commonAncestorContainer;
+                const newParent = newContainer.nodeType === 3 ? newContainer.parentElement : newContainer;
+                
+                if (newParent && newParent.tagName === 'SPAN') {
+                    newParent.style.fontFamily = currentFont;
+                }
+            }
+        }
+
+        this.editor.focus();
+        this.updateActiveFormats();
+    }
+
+    setAlignment(align) {
+        const command = 'justify' + align.replace('align', '').toLowerCase();
+        document.execCommand(command, false, null);
+        this.editor.focus();
     }
 
     updateWordCount() {

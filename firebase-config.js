@@ -35,9 +35,6 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
-// Enable session persistence
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
 export { 
     auth, 
     db, 

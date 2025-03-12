@@ -471,3 +471,48 @@ body {
 .banner-close:hover {
     opacity: 1;
 }
+
+.context-menu {
+    position: fixed;
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.context-menu button {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.context-menu button:hover {
+    background: var(--hover-gradient);
+}
+
+.context-menu button.danger {
+    color: var(--error);
+}
+
+.context-menu button.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.context-menu hr {
+    margin: 0.5rem 0;
+    border: none;
+    border-top: 1px solid var(--border);
+}
