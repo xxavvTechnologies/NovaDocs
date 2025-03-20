@@ -69,6 +69,25 @@
             <div class="toolbar-group">
                 <button id="undoBtn" title="Undo"><i class="fas fa-undo"></i></button>
                 <button id="redoBtn" title="Redo"><i class="fas fa-redo"></i></button>
+            </div>
+            
+            <div class="toolbar-group">
+                <div class="zoom-controls">
+                    <button id="zoomOutBtn" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                    <select id="zoomLevel" title="Zoom Level">
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1" selected>100%</option>
+                        <option value="1.25">125%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2">200%</option>
+                        <option value="fit">Fit</option>
+                        <option value="fill">Fill</option>
+                    </select>
+                    <button id="zoomInBtn" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                </div>
+            </div>
+            <div class="toolbar-group">
                 <select title="Font" class="font-select" id="fontSelect">
                     <optgroup label="Serif Fonts">
                         <option value="'Times New Roman', Times, serif">Times New Roman</option>
@@ -112,23 +131,6 @@
                 <button id="alignCenterBtn" title="Align Center"><i class="fas fa-align-center"></i></button>
                 <button id="alignRightBtn" title="Align Right"><i class="fas fa-align-right"></i></button>
                 <button id="alignJustifyBtn" title="Justify"><i class="fas fa-align-justify"></i></button>
-            </div>
-
-            <div class="toolbar-group">
-                <div class="zoom-controls">
-                    <button id="zoomOutBtn" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
-                    <select id="zoomLevel" title="Zoom Level">
-                        <option value="0.5">50%</option>
-                        <option value="0.75">75%</option>
-                        <option value="1" selected>100%</option>
-                        <option value="1.25">125%</option>
-                        <option value="1.5">150%</option>
-                        <option value="2">200%</option>
-                        <option value="fit">Fit</option>
-                        <option value="fill">Fill</option>
-                    </select>
-                    <button id="zoomInBtn" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                </div>
             </div>
 
             <div class="toolbar-group toolbar-right">

@@ -94,7 +94,6 @@ class DocumentEditor {
         this.selectedRevision = null;
         this.initializeHistoryDialog();
         this.setupZoomControls();
-        this.setupBanner(); // Add this line
     }
 
     async loadDocumentFromUrl() {
