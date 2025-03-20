@@ -31,6 +31,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="featureSearch.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
@@ -110,6 +112,23 @@
                 <button id="alignCenterBtn" title="Align Center"><i class="fas fa-align-center"></i></button>
                 <button id="alignRightBtn" title="Align Right"><i class="fas fa-align-right"></i></button>
                 <button id="alignJustifyBtn" title="Justify"><i class="fas fa-align-justify"></i></button>
+            </div>
+
+            <div class="toolbar-group">
+                <div class="zoom-controls">
+                    <button id="zoomOutBtn" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                    <select id="zoomLevel" title="Zoom Level">
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1" selected>100%</option>
+                        <option value="1.25">125%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2">200%</option>
+                        <option value="fit">Fit</option>
+                        <option value="fill">Fill</option>
+                    </select>
+                    <button id="zoomInBtn" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                </div>
             </div>
 
             <div class="toolbar-group toolbar-right">
@@ -244,12 +263,54 @@
         </div>
     </div>
 
+    <!-- Astro Sidebar -->
+    <div class="astro-sidebar" id="astroSidebar">
+        <div class="astro-header">
+            <h3><i class="fas fa-robot"></i> Astro AI</h3>
+            <button id="closeAstro" class="close-button">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="astro-content">
+            <div id="astroResponses"></div>
+        </div>
+        <div class="astro-footer">
+            <span class="usage-count">
+                Remaining uses: <span id="astroUsageCount">-</span>
+            </span>
+            <div class="astro-actions">
+                <button id="astroTryAgain" class="astro-button">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+                <div class="astro-menu">
+                    <button id="astroMoreActions" class="astro-button">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                    <div class="astro-menu-content">
+                        <button data-action="summarize">
+                            <i class="fas fa-robot"></i> Summarize Text
+                        </button>
+                        <button data-action="expand">
+                            <i class="fas fa-lightbulb"></i> Expand Selection
+                        </button>
+                        <button data-action="draft">
+                            <i class="fas fa-pen-fancy"></i> Draft Content
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="app.js"></script>
     <script src="notifications.js"></script>
+    <script type="module" src="astro.js"></script>
     <script src="exports.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
+    <script type="module" src="featureSearch.js"></script>
 </body>
 </html>
+

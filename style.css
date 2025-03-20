@@ -1,0 +1,41 @@
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 8px;
+}
+
+.zoom-controls select {
+    width: 80px;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--background);
+    color: var(--text);
+}
+
+.zoom-controls button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--background);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.zoom-controls button:hover {
+    background: var(--hover-bg);
+}
+
+.editor-container {
+    transform-origin: top center;
+    transition: transform 0.2s ease;
+}
+
+.document-content {
+    transform-origin: top center;
+    transition: transform 0.2s ease;
+}

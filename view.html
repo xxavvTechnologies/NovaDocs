@@ -59,9 +59,38 @@
         <div class="editor-container view-only">
             <div class="document-metadata"></div>
             <div class="document-controls">
+                <div class="zoom-controls">
+                    <button id="zoomOutBtn" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                    <select id="zoomLevel" title="Zoom Level">
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1" selected>100%</option>
+                        <option value="1.25">125%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2">200%</option>
+                        <option value="fit">Fit</option>
+                        <option value="fill">Fill</option>
+                    </select>
+                    <button id="zoomInBtn" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                </div>
                 <div class="control-notice" id="copyNotice">
                     <i class="fas fa-lock"></i>
                     <span>Copy and paste are disabled by the document owner</span>
+                </div>
+                <div class="view-controls">
+                    <button id="printBtn" title="Print Document"><i class="fas fa-print"></i></button>
+                    <button id="fullscreenBtn" title="Toggle Fullscreen"><i class="fas fa-expand"></i></button>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search in document...">
+                        <button id="prevMatch" title="Previous Match" disabled><i class="fas fa-chevron-up"></i></button>
+                        <button id="nextMatch" title="Next Match" disabled><i class="fas fa-chevron-down"></i></button>
+                        <span id="matchCount"></span>
+                    </div>
+                </div>
+                <div class="page-controls">
+                    <button id="prevPage" title="Previous Page"><i class="fas fa-chevron-left"></i></button>
+                    <span id="pageIndicator">Page 1 of 1</span>
+                    <button id="nextPage" title="Next Page"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </div>
             <div class="document-content">

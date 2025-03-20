@@ -24,6 +24,7 @@ class DocumentEditor {
         this.exporter = new DocumentExporter();
         this.editor = null;
         this.isMarkdownMode = false; // Add this line
+        this.currentZoom = parseFloat(localStorage.getItem('editorZoom')) || 1;
         this.init();
     }
 
@@ -92,6 +93,8 @@ class DocumentEditor {
         this.selectionState = null;
         this.selectedRevision = null;
         this.initializeHistoryDialog();
+        this.setupZoomControls();
+        this.setupBanner(); // Add this line
     }
 
     async loadDocumentFromUrl() {
@@ -941,7 +944,6 @@ class DocumentEditor {
     }
 
     cleanupFontSpans(element) {
-        // Merge adjacent spans with the same properties
         element.querySelectorAll('span').forEach(span => {
             if (span.nextSibling && span.nextSibling.tagName === 'SPAN') {
                 const next = span.nextSibling;
@@ -1578,6 +1580,97 @@ class DocumentEditor {
             notifications.error('Restore Failed', 'Could not restore the selected version');
             console.error('Error restoring revision:', error);
         }
+    }
+
+    setupZoomControls() {
+        const zoomOut = document.getElementById('zoomOutBtn');
+        const zoomIn = document.getElementById('zoomInBtn');
+        const zoomLevel = document.getElementById('zoomLevel');
+
+        // Initialize zoom level
+        this.applyZoom(this.currentZoom);
+        zoomLevel.value = this.currentZoom === 1 ? '1' : this.currentZoom.toString();
+
+        zoomOut.addEventListener('click', () => {
+            const currentIndex = zoomLevel.selectedIndex;
+            if (currentIndex > 0) {
+                zoomLevel.selectedIndex = currentIndex - 1;
+                this.handleZoomChange(zoomLevel.value);
+            }
+        });
+
+        zoomIn.addEventListener('click', () => {
+            const currentIndex = zoomLevel.selectedIndex;
+            if (currentIndex < zoomLevel.options.length - 1) {
+                zoomLevel.selectedIndex = currentIndex + 1;
+                this.handleZoomChange(zoomLevel.value);
+            }
+        });
+
+        zoomLevel.addEventListener('change', (e) => {
+            this.handleZoomChange(e.target.value);
+        });
+
+        // Handle zoom keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === '0') {
+                    e.preventDefault();
+                    this.handleZoomChange('1');
+                    zoomLevel.value = '1';
+                } else if (e.key === '+' || e.key === '=') {
+                    e.preventDefault();
+                    zoomIn.click();
+                } else if (e.key === '-') {
+                    e.preventDefault();
+                    zoomOut.click();
+                }
+            }
+        });
+
+        // Handle zoom with mouse wheel
+        document.addEventListener('wheel', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    zoomIn.click();
+                } else {
+                    zoomOut.click();
+                }
+            }
+        }, { passive: false });
+    }
+
+    handleZoomChange(value) {
+        if (value === 'fit' || value === 'fill') {
+            this.applyFitZoom(value);
+        } else {
+            this.applyZoom(parseFloat(value));
+        }
+    }
+
+    applyZoom(scale) {
+        this.currentZoom = scale;
+        localStorage.setItem('editorZoom', scale.toString());
+        this.editor.parentElement.style.transform = `scale(${scale})`;
+        this.editor.parentElement.style.transformOrigin = 'top center';
+        this.checkPageBreaks();
+    }
+
+    applyFitZoom(type) {
+        const container = this.editor.parentElement;
+        const containerWidth = container.parentElement.clientWidth;
+        const pageWidth = this.editor.querySelector('.page').offsetWidth;
+        
+        let scale;
+        if (type === 'fit') {
+            scale = (containerWidth - 40) / pageWidth; // 40px for padding
+        } else { // fill
+            scale = containerWidth / pageWidth;
+        }
+
+        this.applyZoom(scale);
+        document.getElementById('zoomLevel').value = type;
     }
 }
 

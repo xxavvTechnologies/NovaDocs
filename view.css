@@ -45,7 +45,6 @@ body {
     width: auto;
 }
 
-
 .document-title {
     flex: 1;
     padding: 0 2rem;
@@ -362,7 +361,6 @@ body {
     }
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
     .account-section {
         gap: 0.5rem;
@@ -379,6 +377,7 @@ body {
     .account-section .primary-button i {
         margin: 0;
     }
+} /* Add missing closing bracket */
 
 /* Embed mode */
 .embed-mode {
@@ -420,5 +419,107 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* View controls */
+.view-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.view-controls button {
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.view-controls button:hover {
+    background: var(--hover-bg);
+}
+
+.view-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    padding: 0.25rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.search-box input {
+    width: 200px;
+    border: none;
+    padding: 0.25rem;
+    background: transparent;
+    color: var(--text);
+}
+
+.search-box input:focus {
+    outline: none;
+}
+
+.search-box button {
+    padding: 0.25rem 0.5rem;
+}
+
+#matchCount {
+    color: var(--secondary);
+    font-size: 0.9rem;
+    min-width: 3rem;
+    text-align: center;
+}
+
+.page-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.page-controls button {
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.page-controls button:hover {
+    background: var(--hover-bg);
+}
+
+.page-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.search-highlight {
+    background: #ffd700;
+}
+
+.search-highlight.active {
+    background: #ff9632;
+}
+
+@media print {
+    .document-controls,
+    .top-header {
+        display: none !important;
+    }
+
+    .page {
+        margin: 0;
+        box-shadow: none;
     }
 }

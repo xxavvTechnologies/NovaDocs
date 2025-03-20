@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "nlpcloud": "^2.0.8"
+  }
+}
