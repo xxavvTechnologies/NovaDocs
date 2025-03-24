@@ -2,8 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nova Docs - Editor">
     
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
     <!-- SEO Meta Tags -->
     <title>Document Editor - Nova Docs</title>
     <meta name="description" content="Create and edit documents with Nova Docs' powerful editor. Features include real-time collaboration, automatic saving, and rich text formatting.">
@@ -148,6 +161,10 @@
                         <a href="#" data-format="txt">Export as Plain Text</a>
                     </div>
                 </div>
+                <button id="featureSearchBtn" title="Feature Search (Ctrl + .)" class="feature-search-btn">
+                    <i class="fas fa-search"></i>
+                    <span class="kbd-shortcut">Ctrl + .</span>
+                </button>
             </div>
         </div>
 

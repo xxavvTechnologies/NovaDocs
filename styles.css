@@ -1196,6 +1196,8 @@ h1, h2, h3, h4, h5, h6,
     animation: astroSlideUp 0.3s ease-out;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .astro-response:hover {
@@ -1237,13 +1239,14 @@ h1, h2, h3, h4, h5, h6,
     border-top: 1px solid var(--border);
     background: linear-gradient(45deg, #4f46e510, #7c3aed20);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column; /* Change to column */
+    gap: 0.5rem; /* Add gap between elements */
 }
 
 .astro-actions {
     display: flex;
     gap: 0.5rem;
+    align-self: flex-end; /* Align buttons to the right */
 }
 
 .astro-button {
@@ -1284,6 +1287,7 @@ h1, h2, h3, h4, h5, h6,
     padding: 0.5rem;
     width: 200px;
     margin-bottom: 0.5rem;
+    z-index: 102; /* Add higher z-index */
 }
 
 .astro-menu-content.active {
@@ -1339,4 +1343,217 @@ h1, h2, h3, h4, h5, h6,
         width: 100%;
         right: -100%;
     }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .container {
+    padding: 0;
+  }
+
+  .top-header {
+    padding: 0.5rem;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .logo-container {
+    flex: 0 0 auto;
+  }
+
+  .document-title {
+    flex: 1 1 100%;
+    order: 3;
+    margin-top: 0.5rem;
+  }
+
+  .title-input {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .toolbar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .toolbar-group {
+    flex-wrap: nowrap;
+  }
+
+  .toolbar-group button {
+    padding: 0.5rem;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .toolbar-group select {
+    max-width: 100px;
+  }
+
+  .account-section {
+    gap: 0.5rem;
+  }
+
+  .user-button span,
+  .button-text {
+    display: none;
+  }
+
+  .dropdown-content {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    transform: none;
+    border-radius: 1rem 1rem 0 0;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .dialog {
+    width: 90%;
+    max-width: none;
+    margin: 1rem;
+  }
+
+  .editor-container {
+    padding: 0.5rem;
+  }
+
+  .page {
+    padding: 1rem;
+    margin: 0.5rem 0;
+    width: 100%;
+    min-height: calc(100vh - var(--header-height) - var(--top-header-height));
+  }
+
+  .status-bar {
+    font-size: 0.75rem;
+    padding: 0 0.5rem;
+  }
+
+  /* Improved touch targets */
+  button, 
+  select,
+  input[type="text"],
+  .dropdown-content a {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem;
+  }
+
+  /* Better mobile scroll handling */
+  .editor-container {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile-friendly dialogs */
+  .dialog {
+    top: auto;
+    bottom: 0;
+    transform: none;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  /* Responsive font sizes */
+  :root {
+    --dropdown-text-size: 16px;
+  }
+
+  body {
+    font-size: 16px;
+  }
+}
+
+.feature-search-btn {
+    background: linear-gradient(45deg, #4f46e5, #7c3aed) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.6rem 1.2rem !important;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.feature-search-btn:hover {
+    background: linear-gradient(45deg, #4338ca, #6d28d9) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.3) !important;
+}
+
+.kbd-shortcut {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    font-family: 'Roboto Mono', monospace;
+    padding: 0.2rem 0.4rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .kbd-shortcut {
+        display: none;
+    }
+    
+    .feature-search-btn {
+        padding: 0.6rem !important;
+    }
+}
+
+.astro-response-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.astro-response:hover .astro-response-actions {
+    opacity: 1;
+}
+
+.astro-insert-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: linear-gradient(45deg, #4f46e5, #7c3aed);
+    color: white;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.astro-insert-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.3);
+    background: linear-gradient(45deg, #4338ca, #6d28d9);
+}
+
+@keyframes astroInsertContent {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    50% {
+        opacity: 0.5;
+        background: rgba(124, 58, 237, 0.1);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        background: transparent;
+    }
+}
+
+.astro-inserted {
+    animation: astroInsertContent 0.5s ease-out forwards;
 }

@@ -249,7 +249,52 @@ class AstroAI {
     }
 
     wrapResponseInContainer(text) {
-        return `<div class="astro-response">${text}</div>`;
+        const container = document.createElement('div');
+        container.className = 'astro-response';
+        container.innerHTML = `
+            ${text}
+            <div class="astro-response-actions">
+                <button class="astro-insert-btn" onclick="astro.insertResponse(this)">
+                    <i class="fas fa-arrow-down"></i>
+                    Insert
+                </button>
+            </div>
+        `;
+        
+        // Only append to responses container
+        const responsesContainer = document.getElementById('astroResponses');
+        if (responsesContainer) {
+            responsesContainer.appendChild(container);
+        }
+        
+        return '';
+    }
+
+    insertResponse(button) {
+        const responseContainer = button.closest('.astro-response');
+        const content = responseContainer.querySelector(':first-child').cloneNode(true);
+        content.classList.add('astro-inserted');
+        
+        // Get the editor and its last page
+        const editor = document.getElementById('editor');
+        const lastPage = editor.querySelector('.page:last-child');
+
+        if (lastPage) {
+            lastPage.appendChild(content);
+
+            // Scroll content into view
+            content.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Trigger page breaks check after animation
+            setTimeout(() => {
+                window.editor.checkPageBreaks();
+            }, 500);
+
+            // Remove animation class after it completes
+            setTimeout(() => {
+                content.classList.remove('astro-inserted');
+            }, 1000);
+        }
     }
 
     canUseAstro() {

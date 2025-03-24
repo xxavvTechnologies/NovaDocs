@@ -25,7 +25,9 @@ class DocumentEditor {
         this.editor = null;
         this.isMarkdownMode = false; // Add this line
         this.currentZoom = parseFloat(localStorage.getItem('editorZoom')) || 1;
+        this.isMobile = window.innerWidth <= 768;
         this.init();
+        this.setupMobileOptimizations();
     }
 
     async init() {
@@ -1670,6 +1672,49 @@ class DocumentEditor {
 
         this.applyZoom(scale);
         document.getElementById('zoomLevel').value = type;
+    }
+
+    setupMobileOptimizations() {
+        // Handle toolbar scrolling
+        const toolbar = document.querySelector('.toolbar');
+        let touchStartX = 0;
+        let scrollLeft = 0;
+
+        toolbar.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].pageX - toolbar.offsetLeft;
+            scrollLeft = toolbar.scrollLeft;
+        }, { passive: true });
+
+        toolbar.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) return; // Ignore multi-touch
+            const touchX = e.touches[0].pageX - toolbar.offsetLeft;
+            const walk = (touchX - touchStartX) * 2;
+            toolbar.scrollLeft = scrollLeft - walk;
+        }, { passive: true });
+
+        // Handle mobile keyboard
+        this.editor.addEventListener('focus', () => {
+            if (this.isMobile) {
+                setTimeout(() => {
+                    this.editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        });
+
+        // Handle touch selection
+        this.editor.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault(); // Prevent zoom on double touch
+            }
+        }, { passive: false });
+
+        // Optimize dropdowns for mobile
+        const dropdowns = document.querySelectorAll('.dropdown-content');
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener('touchmove', (e) => {
+                e.stopPropagation();
+            }, { passive: true });
+        });
     }
 }
 

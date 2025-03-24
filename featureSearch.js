@@ -146,6 +146,12 @@ class FeatureSearch {
     }
 
     setupEventListeners() {
+        // Add feature search button listener
+        const featureSearchBtn = document.getElementById('featureSearchBtn');
+        if (featureSearchBtn) {
+            featureSearchBtn.addEventListener('click', () => this.showDialog());
+        }
+
         // Toggle dialog with Ctrl + / shortcut
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === '.') {

@@ -1,0 +1,38 @@
+{
+    "name": "Nova Docs",
+    "short_name": "Nova Docs",
+    "description": "Create, edit, and share documents online",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#2563eb",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "https://d2zcpib8duehag.cloudfront.net/Nova%20Docs%20w_o%20text.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Preview.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        },
+        {
+            "src": "https://d2zcpib8duehag.cloudfront.net/Nova-Docs-Mobile.png",
+            "sizes": "720x1280",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ]
+}
