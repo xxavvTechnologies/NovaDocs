@@ -249,51 +249,64 @@ class AstroAI {
     }
 
     wrapResponseInContainer(text) {
-        const container = document.createElement('div');
-        container.className = 'astro-response';
-        container.innerHTML = `
-            ${text}
-            <div class="astro-response-actions">
-                <button class="astro-insert-btn" onclick="astro.insertResponse(this)">
-                    <i class="fas fa-arrow-down"></i>
-                    Insert
-                </button>
+        return `
+            <div class="astro-response">
+                <div class="response-content">${text}</div>
+                <div class="astro-response-actions">
+                    <button class="astro-insert-btn" onclick="astro.insertResponse(this)">
+                        <i class="fas fa-arrow-down"></i>
+                        Insert
+                    </button>
+                </div>
             </div>
         `;
-        
-        // Only append to responses container
-        const responsesContainer = document.getElementById('astroResponses');
-        if (responsesContainer) {
-            responsesContainer.appendChild(container);
-        }
-        
-        return '';
     }
 
     insertResponse(button) {
         const responseContainer = button.closest('.astro-response');
-        const content = responseContainer.querySelector(':first-child').cloneNode(true);
-        content.classList.add('astro-inserted');
+        const content = responseContainer.querySelector('.response-content').textContent;
         
-        // Get the editor and its last page
+        // Get the editor and create a new text node
         const editor = document.getElementById('editor');
         const lastPage = editor.querySelector('.page:last-child');
-
+        
         if (lastPage) {
-            lastPage.appendChild(content);
+            // Create a paragraph element for the content
+            const paragraph = document.createElement('p');
+            paragraph.textContent = content;
+            paragraph.classList.add('astro-inserted');
+            
+            // Insert at cursor position if there's a selection
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                if (lastPage.contains(range.commonAncestorContainer)) {
+                    range.deleteContents();
+                    range.insertNode(paragraph);
+                } else {
+                    lastPage.appendChild(paragraph);
+                }
+            } else {
+                lastPage.appendChild(paragraph);
+            }
 
             // Scroll content into view
-            content.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            paragraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             // Trigger page breaks check after animation
             setTimeout(() => {
-                window.editor.checkPageBreaks();
+                if (window.editor && window.editor.checkPageBreaks) {
+                    window.editor.checkPageBreaks();
+                }
             }, 500);
 
             // Remove animation class after it completes
             setTimeout(() => {
-                content.classList.remove('astro-inserted');
+                paragraph.classList.remove('astro-inserted');
             }, 1000);
+
+            // Close the sidebar
+            this.closeSidebar();
         }
     }
 
