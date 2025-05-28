@@ -26,15 +26,31 @@ class DocumentEditor {
         this.isMarkdownMode = false; // Add this line
         this.currentZoom = parseFloat(localStorage.getItem('editorZoom')) || 1;
         this.isMobile = window.innerWidth <= 768;
+        
+        // Stability improvements - initialize cleanup arrays
+        this.timeouts = new Set();
+        this.intervals = new Set();
+        this.eventListeners = new Map();
+        this.retryAttempts = 0;
+        this.maxRetries = 3;
+        this.isDestroyed = false;
+        
         this.init();
         this.setupMobileOptimizations();
-    }
-
-    async init() {
+        
+        // Add cleanup handler for page unload
+        this.setupCleanupHandlers();
+    }    async init() {
         try {
-            // Wait for DOM to be ready
+            // Prevent double initialization
+            if (this.isDestroyed) return;
+            
+            // Wait for DOM to be ready with timeout
             if (document.readyState === 'loading') {
-                await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+                await Promise.race([
+                    new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve)),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('DOM load timeout')), 10000))
+                ]);
             }
             
             // Get editor element and verify it exists
@@ -45,13 +61,151 @@ class DocumentEditor {
             
             await this.setupEditor();
             await this.loadDocumentFromUrl();
+            
+            // Mark as successfully initialized
+            this.isInitialized = true;
+            
         } catch (error) {
             console.error('Editor initialization failed:', error);
-            // Optionally show error to user
-            if (window.notifications) {
-                notifications.error('Initialization Failed', 'Could not initialize editor');
-            }
+            this.handleInitializationError(error);
         }
+    }
+
+    handleInitializationError(error) {
+        // Show user-friendly error message
+        if (window.notifications) {
+            notifications.error('Initialization Failed', 'Could not initialize editor. Please refresh the page.');
+        }
+        
+        // Try to provide a fallback editor
+        const editor = document.getElementById('editor');
+        if (editor) {
+            editor.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #666;">
+                    <h3>Editor failed to initialize</h3>
+                    <p>Please refresh the page to try again.</p>
+                    <button onclick="window.location.reload()" style="padding: 8px 16px; margin-top: 10px;">
+                        Refresh Page
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    setupCleanupHandlers() {
+        // Setup cleanup on page unload
+        const cleanup = () => this.cleanup();
+        
+        window.addEventListener('beforeunload', cleanup);
+        window.addEventListener('unload', cleanup);
+        
+        // Store cleanup handlers to remove later
+        this.eventListeners.set('beforeunload', cleanup);
+        this.eventListeners.set('unload', cleanup);
+    }    cleanup() {
+        if (this.isDestroyed) return;
+        
+        console.log('Cleaning up DocumentEditor...');
+        this.isDestroyed = true;
+        
+        try {
+            // Clear all timeouts
+            this.timeouts.forEach(timeout => {
+                try {
+                    clearTimeout(timeout);
+                } catch (error) {
+                    console.error('Error clearing timeout:', error);
+                }
+            });
+            this.timeouts.clear();
+            
+            // Clear all intervals
+            this.intervals.forEach(interval => {
+                try {
+                    clearInterval(interval);
+                } catch (error) {
+                    console.error('Error clearing interval:', error);
+                }
+            });
+            this.intervals.clear();
+            
+            // Remove all tracked event listeners
+            this.eventListeners.forEach((listener, key) => {
+                try {
+                    if (listener.element && listener.handler) {
+                        listener.element.removeEventListener(listener.event, listener.handler);
+                    }
+                } catch (error) {
+                    console.error(`Error removing event listener ${key}:`, error);
+                }
+            });
+            this.eventListeners.clear();
+            
+            // Clear any pending batch timeout
+            if (this.batchTimeout) {
+                try {
+                    clearTimeout(this.batchTimeout);
+                } catch (error) {
+                    console.error('Error clearing batch timeout:', error);
+                }
+                this.batchTimeout = null;
+            }
+            
+            // Clear page break debounce
+            if (this.pageBreakDebounce) {
+                try {
+                    clearTimeout(this.pageBreakDebounce);
+                } catch (error) {
+                    console.error('Error clearing page break debounce:', error);
+                }
+                this.pageBreakDebounce = null;
+            }
+            
+            // Final save attempt
+            if (this.currentDocId && this.pendingChanges.length > 0) {
+                try {
+                    this.processBatch().catch(error => {
+                        console.error('Error in final save attempt:', error);
+                    });
+                } catch (error) {
+                    console.error('Error initiating final save:', error);
+                }
+            }
+            
+            // Clear references
+            this.editor = null;
+            this.selectionState = null;
+            this.pendingChanges = [];
+            
+        } catch (error) {
+            console.error('Error during cleanup:', error);
+        }
+    }
+
+    // Utility method to manage timeouts
+    setTimeout(callback, delay) {
+        const timeout = setTimeout(() => {
+            this.timeouts.delete(timeout);
+            if (!this.isDestroyed) {
+                callback();
+            }
+        }, delay);
+        this.timeouts.add(timeout);
+        return timeout;
+    }
+
+    // Utility method to manage intervals
+    setInterval(callback, delay) {
+        const interval = setInterval(() => {
+            if (!this.isDestroyed) {
+                callback();
+            } else {
+                clearInterval(interval);
+                this.intervals.delete(interval);
+            }
+        }, delay);
+        this.intervals.add(interval);
+        return interval;
     }
 
     setupEditor() {
@@ -96,59 +250,101 @@ class DocumentEditor {
         this.selectedRevision = null;
         this.initializeHistoryDialog();
         this.setupZoomControls();
-    }
-
-    async loadDocumentFromUrl() {
+    }    async loadDocumentFromUrl() {
         try {
+            // Prevent loading if destroyed
+            if (this.isDestroyed) return;
+            
             // Get document ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             const docId = urlParams.get('id');
             const action = urlParams.get('action');
 
-            // Show loading state
-            this.editor.innerHTML = `
-                <div class="loading-state" style="display: flex; justify-content: center; align-items: center; height: 200px;">
-                    <i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i>
-                    Loading document...
-                </div>
-            `;
+            // Show loading state with null check
+            if (this.editor) {
+                this.editor.innerHTML = `
+                    <div class="loading-state" style="display: flex; justify-content: center; align-items: center; height: 200px;">
+                        <i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i>
+                        Loading document...
+                    </div>
+                `;
+            }
 
             if (action === 'new') {
                 await this.createNewDocument();
-                this.updateDocumentTitle('Untitled Document'); // Add this line
+                this.updateDocumentTitle('Untitled Document');
             } else if (docId) {
-                const docRef = doc(db, 'documents', docId);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    // Check if user has access to this document
-                    if (data.userId === this.currentUser.uid || 
-                        data.isPublic || 
-                        (data.sharedWith && data.sharedWith.includes(this.currentUser.uid))) {
-                        
-                        this.currentDocId = docId;
-                        
-                        // Handle markdown mode
-                        if (data.isMarkdown) {
-                            this.isMarkdownMode = true;
-                            const markdownToggle = document.getElementById('markdownToggle');
-                            markdownToggle.classList.add('active');
-                            this.editor.classList.add('markdown-mode');
-                            this.editor.innerHTML = `<pre><code>${data.content}</code></pre>`;
-                        } else {
-                            // Set content and title
-                            const content = data.content || '<div class="page" data-page="1"><p>Start typing here...</p></div>';
-                            this.editor.innerHTML = content;
-                        }
-                        this.updateDocumentTitle(data.title || 'Untitled Document');
-                    }
-                }
+                await this.loadExistingDocument(docId);
+            } else {
+                // No document specified, create new one
+                await this.createNewDocument();
+                this.updateDocumentTitle('Untitled Document');
             }
         } catch (error) {
             console.error('Error loading document:', error);
-            this.updateDocumentTitle('Error Loading Document');
+            this.handleDocumentLoadError(error);
+        }
+    }
+
+    async loadExistingDocument(docId) {
+        const docRef = doc(db, 'documents', docId);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            throw new Error('Document not found');
+        }
+
+        const data = docSnap.data();
+        
+        // Check if user has access to this document
+        if (!this.currentUser || 
+            (data.userId !== this.currentUser.uid && 
+             !data.isPublic && 
+             (!data.sharedWith || !data.sharedWith.includes(this.currentUser.uid)))) {
+            throw new Error('Access denied to this document');
+        }
+        
+        this.currentDocId = docId;
+        
+        // Handle markdown mode safely
+        if (data.isMarkdown) {
+            this.isMarkdownMode = true;
+            const markdownToggle = document.getElementById('markdownToggle');
+            if (markdownToggle) {
+                markdownToggle.classList.add('active');
+            }
+            if (this.editor) {
+                this.editor.classList.add('markdown-mode');
+                this.editor.innerHTML = `<pre><code>${data.content || ''}</code></pre>`;
+            }
+        } else {
+            // Set content and title with fallback
+            const content = data.content || '<div class="page" data-page="1"><p>Start typing here...</p></div>';
+            if (this.editor) {
+                this.editor.innerHTML = content;
+            }
+        }
+        this.updateDocumentTitle(data.title || 'Untitled Document');
+    }
+
+    handleDocumentLoadError(error) {
+        console.error('Document load error:', error);
+        this.updateDocumentTitle('Error Loading Document');
+        
+        if (this.editor) {
+            this.editor.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #666;">
+                    <h3>Failed to load document</h3>
+                    <p>${error.message}</p>
+                    <button onclick="window.location.reload()" style="padding: 8px 16px; margin-top: 10px;">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+        
+        if (window.notifications) {
+            notifications.error('Load Failed', error.message);
         }
     }
 
@@ -177,19 +373,23 @@ class DocumentEditor {
             selection.removeAllRanges();
             selection.addRange(this.lastSelection);
         }
-    }
-
-    saveEditorState() {
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-            // Save both range and scroll position
-            this.selectionState = {
-                range: selection.getRangeAt(0),
-                scroll: {
-                    x: window.scrollX,
-                    y: window.scrollY
-                }
-            };
+    }    saveEditorState() {
+        try {
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                // Save both range and scroll position
+                this.selectionState = {
+                    range: selection.getRangeAt(0).cloneRange(),
+                    scroll: {
+                        x: window.scrollX || 0,
+                        y: window.scrollY || 0
+                    }
+                };
+            }
+        } catch (error) {
+            console.error('Failed to save editor state:', error);
+            // Reset selection state on error
+            this.selectionState = null;
         }
     }
 
@@ -198,65 +398,168 @@ class DocumentEditor {
 
         try {
             // Restore scroll position first
-            window.scrollTo(this.selectionState.scroll.x, this.selectionState.scroll.y);
+            if (this.selectionState.scroll) {
+                window.scrollTo(this.selectionState.scroll.x, this.selectionState.scroll.y);
+            }
 
-            // Then restore selection
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(this.selectionState.range);
+            // Then restore selection with validation
+            if (this.selectionState.range) {
+                const selection = window.getSelection();
+                if (selection) {
+                    selection.removeAllRanges();
+                    
+                    // Validate range is still valid
+                    const range = this.selectionState.range;
+                    if (range.startContainer && range.endContainer &&
+                        this.editor && this.editor.contains(range.startContainer) &&
+                        this.editor.contains(range.endContainer)) {
+                        selection.addRange(range);
+                    }
+                }
+            }
         } catch (error) {
             console.error('Failed to restore editor state:', error);
+            // Clear invalid state
+            this.selectionState = null;
         }
-    }
-
-    initializeEditor() {
+    }    initializeEditor() {
         // Check if editor exists before initializing
         if (!this.editor) {
             throw new Error('Editor element not found during initialization');
         }
 
         try {
-            // Add input event listeners with Markdown handling
-            this.editor.addEventListener('input', (e) => {
-                this.handleEditorChange();
-                this.updateWordCount();
-                this.handleMarkdownConversion(e);
-            });
+            // Add input event listeners with Markdown handling and error boundaries
+            const inputHandler = (e) => {
+                try {
+                    this.handleEditorChange();
+                    this.updateWordCount();
+                    this.handleMarkdownConversion(e);
+                } catch (error) {
+                    console.error('Error in input handler:', error);
+                }
+            };
+
+            this.editor.addEventListener('input', inputHandler);
+            this.eventListeners.set('editor-input', { element: this.editor, event: 'input', handler: inputHandler });
 
             // Initialize toolbar buttons if they exist
+            this.initializeToolbarButtons();
+
+            // Initialize font controls
+            this.initializeFontControls();
+
+            // Add Markdown mode toggle if it exists
+            this.initializeMarkdownToggle();
+
+            // Add selection tracking for formatting
+            this.initializeSelectionTracking();
+
+        } catch (error) {
+            console.error('Error initializing editor components:', error);
+            throw error;
+        }
+    }
+
+    initializeToolbarButtons() {
+        try {
             const toolbarButtons = document.querySelectorAll('.toolbar button');
             if (toolbarButtons.length > 0) {
                 toolbarButtons.forEach(button => {
-                    button.addEventListener('click', (e) => this.handleToolbarAction(e));
+                    const clickHandler = (e) => {
+                        try {
+                            this.handleToolbarAction(e);
+                        } catch (error) {
+                            console.error('Error in toolbar action:', error);
+                        }
+                    };
+                    button.addEventListener('click', clickHandler);
                 });
             }
+        } catch (error) {
+            console.error('Error initializing toolbar buttons:', error);
+        }
+    }
 
+    initializeFontControls() {
+        try {
             // Initialize font select if it exists
             const fontSelect = document.getElementById('fontSelect');
             if (fontSelect) {
-                fontSelect.addEventListener('change', (e) => {
-                    this.execCommand('fontName', e.target.value);
-                });
+                const fontHandler = (e) => {
+                    try {
+                        this.execCommand('fontName', e.target.value);
+                    } catch (error) {
+                        console.error('Error applying font:', error);
+                    }
+                };
+                fontSelect.addEventListener('change', fontHandler);
+                this.eventListeners.set('font-select', { element: fontSelect, event: 'change', handler: fontHandler });
             }
 
             // Initialize font size if it exists
             const fontSize = document.getElementById('fontSize');
             if (fontSize) {
-                fontSize.addEventListener('change', (e) => {
-                    this.execCommand('fontSize', e.target.value);
-                });
+                const sizeHandler = (e) => {
+                    try {
+                        this.execCommand('fontSize', e.target.value);
+                    } catch (error) {
+                        console.error('Error applying font size:', error);
+                    }
+                };
+                fontSize.addEventListener('change', sizeHandler);
+                this.eventListeners.set('font-size', { element: fontSize, event: 'change', handler: sizeHandler });
             }
+        } catch (error) {
+            console.error('Error initializing font controls:', error);
+        }
+    }
 
-            // Add Markdown mode toggle if it exists
+    initializeMarkdownToggle() {
+        try {
             const markdownToggle = document.getElementById('markdownToggle');
             if (markdownToggle) {
-                markdownToggle.addEventListener('click', () => this.toggleMarkdownMode());
+                const toggleHandler = () => {
+                    try {
+                        this.toggleMarkdownMode();
+                    } catch (error) {
+                        console.error('Error toggling markdown mode:', error);
+                    }
+                };
+                markdownToggle.addEventListener('click', toggleHandler);
+                this.eventListeners.set('markdown-toggle', { element: markdownToggle, event: 'click', handler: toggleHandler });
                 this.isMarkdownMode = false;
             }
-
         } catch (error) {
-            console.error('Error initializing editor components:', error);
-            throw error;
+            console.error('Error initializing markdown toggle:', error);
+        }
+    }
+
+    initializeSelectionTracking() {
+        try {
+            const keyupHandler = () => {
+                try {
+                    this.updateActiveFormats();
+                } catch (error) {
+                    console.error('Error updating formats on keyup:', error);
+                }
+            };
+
+            const mouseupHandler = () => {
+                try {
+                    this.updateActiveFormats();
+                } catch (error) {
+                    console.error('Error updating formats on mouseup:', error);
+                }
+            };
+
+            this.editor.addEventListener('keyup', keyupHandler);
+            this.editor.addEventListener('mouseup', mouseupHandler);
+
+            this.eventListeners.set('editor-keyup', { element: this.editor, event: 'keyup', handler: keyupHandler });
+            this.eventListeners.set('editor-mouseup', { element: this.editor, event: 'mouseup', handler: mouseupHandler });
+        } catch (error) {
+            console.error('Error initializing selection tracking:', error);
         }
     }
 
@@ -536,80 +839,157 @@ class DocumentEditor {
         const b = parseInt(match[3]).toString(16).padStart(2, '0');
         
         return `#${r}${g}${b}`;
+    }    attachEventListeners() {
+        try {
+            // User menu dropdown with error handling
+            this.setupUserMenu();
+
+            // Format tracking with error boundaries
+            this.setupFormatTracking();
+
+            // Export functionality with error handling
+            this.setupExportHandlers();
+
+        } catch (error) {
+            console.error('Error attaching event listeners:', error);
+        }
     }
 
-    attachEventListeners() {
-        // User menu dropdown
-        const userMenuBtn = document.getElementById('userMenuBtn');
-        const userDropdown = document.getElementById('userDropdown');
+    setupUserMenu() {
+        try {
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdown = document.getElementById('userDropdown');
 
-        userMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userDropdown.classList.toggle('show');
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
-                userDropdown.classList.remove('show');
-            }
-        });
-
-        // Format tracking
-        this.editor.addEventListener('keyup', () => this.updateActiveFormats());
-        this.editor.addEventListener('mouseup', () => this.updateActiveFormats());
-
-        // Add export handlers
-        const exportBtn = document.getElementById('exportBtn');
-        const exportDropdown = document.getElementById('exportDropdown');
-        
-        exportBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            exportDropdown.classList.toggle('show');
-        });
-
-        exportDropdown.addEventListener('click', async (e) => {
-            e.preventDefault();
-            if (e.target.tagName === 'A') {
-                const format = e.target.dataset.format;
-                const title = document.getElementById('docTitle').value || 'Untitled Document';
-                const content = this.editor.innerHTML;
-                
-                try {
-                    switch (format) {
-                        case 'pdf':
-                            await this.exporter.exportToPDF(content, title);
-                            break;
-                        case 'word':
-                            this.exporter.exportToWord(content);
-                            break;
-                        case 'markdown':
-                            this.exporter.exportToMarkdown(content);
-                            break;
-                        case 'rtf':
-                            this.exporter.exportToRTF(content);
-                            break;
-                        case 'html':
-                            this.exporter.exportToHTML(content);
-                            break;
-                        case 'txt':
-                            this.exporter.exportToPlainText(content);
-                            break;
+            if (userMenuBtn && userDropdown) {
+                const menuClickHandler = (e) => {
+                    try {
+                        e.stopPropagation();
+                        userDropdown.classList.toggle('show');
+                    } catch (error) {
+                        console.error('Error handling user menu click:', error);
                     }
-                    notifications.success('Export Complete', `Document exported as ${format.toUpperCase()}`);
-                } catch (error) {
-                    console.error('Export error:', error);
-                    notifications.error('Export Failed', `Could not export as ${format.toUpperCase()}`);
-                }
-            }
-        });
+                };
 
-        // Close export dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!exportDropdown.contains(e.target) && !exportBtn.contains(e.target)) {
-                exportDropdown.classList.remove('show');
+                const outsideClickHandler = (e) => {
+                    try {
+                        if (!userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
+                            userDropdown.classList.remove('show');
+                        }
+                    } catch (error) {
+                        console.error('Error handling outside click:', error);
+                    }
+                };
+
+                userMenuBtn.addEventListener('click', menuClickHandler);
+                document.addEventListener('click', outsideClickHandler);
+
+                this.eventListeners.set('user-menu-click', { element: userMenuBtn, event: 'click', handler: menuClickHandler });
+                this.eventListeners.set('user-menu-outside', { element: document, event: 'click', handler: outsideClickHandler });
             }
-        });
+        } catch (error) {
+            console.error('Error setting up user menu:', error);
+        }
+    }
+
+    setupFormatTracking() {
+        try {
+            if (this.editor) {
+                // These handlers are already set up in initializeSelectionTracking
+                // This method is kept for backward compatibility
+            }
+        } catch (error) {
+            console.error('Error setting up format tracking:', error);
+        }
+    }
+
+    setupExportHandlers() {
+        try {
+            const exportBtn = document.getElementById('exportBtn');
+            const exportDropdown = document.getElementById('exportDropdown');
+            
+            if (exportBtn && exportDropdown) {
+                const exportClickHandler = (e) => {
+                    try {
+                        e.stopPropagation();
+                        exportDropdown.classList.toggle('show');
+                    } catch (error) {
+                        console.error('Error handling export button click:', error);
+                    }
+                };
+
+                const exportItemHandler = async (e) => {
+                    try {
+                        e.preventDefault();
+                        if (e.target.tagName === 'A') {
+                            const format = e.target.dataset.format;
+                            const titleElement = document.getElementById('docTitle');
+                            const title = titleElement ? titleElement.value || 'Untitled Document' : 'Untitled Document';
+                            const content = this.editor ? this.editor.innerHTML : '';
+                            
+                            await this.handleExport(format, title, content);
+                        }
+                    } catch (error) {
+                        console.error('Export error:', error);
+                        if (window.notifications) {
+                            notifications.error('Export Failed', `Could not export document: ${error.message}`);
+                        }
+                    }
+                };
+
+                const exportOutsideClickHandler = (e) => {
+                    try {
+                        if (!exportDropdown.contains(e.target) && !exportBtn.contains(e.target)) {
+                            exportDropdown.classList.remove('show');
+                        }
+                    } catch (error) {
+                        console.error('Error handling export outside click:', error);
+                    }
+                };
+
+                exportBtn.addEventListener('click', exportClickHandler);
+                exportDropdown.addEventListener('click', exportItemHandler);
+                document.addEventListener('click', exportOutsideClickHandler);
+
+                this.eventListeners.set('export-btn', { element: exportBtn, event: 'click', handler: exportClickHandler });
+                this.eventListeners.set('export-dropdown', { element: exportDropdown, event: 'click', handler: exportItemHandler });
+                this.eventListeners.set('export-outside', { element: document, event: 'click', handler: exportOutsideClickHandler });
+            }
+        } catch (error) {
+            console.error('Error setting up export handlers:', error);
+        }
+    }
+
+    async handleExport(format, title, content) {
+        if (!this.exporter) {
+            throw new Error('Exporter not available');
+        }
+
+        switch (format) {
+            case 'pdf':
+                await this.exporter.exportToPDF(content, title);
+                break;
+            case 'word':
+                this.exporter.exportToWord(content);
+                break;
+            case 'markdown':
+                this.exporter.exportToMarkdown(content);
+                break;
+            case 'rtf':
+                this.exporter.exportToRTF(content);
+                break;
+            case 'html':
+                this.exporter.exportToHTML(content);
+                break;
+            case 'txt':
+                this.exporter.exportToPlainText(content);
+                break;
+            default:
+                throw new Error(`Unsupported export format: ${format}`);
+        }
+        
+        if (window.notifications) {
+            notifications.success('Export Complete', `Document exported as ${format.toUpperCase()}`);
+        }
     }
 
     setupAuthStateListener() {
@@ -623,103 +1003,234 @@ class DocumentEditor {
                 window.location.href = 'index.html';
             }
         });
+    }    storeCursorPosition() {
+        try {
+            const selection = window.getSelection();
+            if (!selection || !selection.rangeCount) return null;
+
+            const range = selection.getRangeAt(0);
+            const preSelectionRange = range.cloneRange();
+            preSelectionRange.selectNodeContents(this.editor);
+            preSelectionRange.setEnd(range.startContainer, range.startOffset);
+            
+            const start = preSelectionRange.toString().length;
+            const selectedText = range.toString();
+
+            return {
+                start,
+                end: start + selectedText.length,
+                scrollTop: this.editor ? this.editor.scrollTop : 0,
+                scrollLeft: this.editor ? this.editor.scrollLeft : 0,
+                selectedText, // Store selected text for validation
+                containerPath: this.getNodePath(range.startContainer) // Store path to container
+            };
+        } catch (error) {
+            console.error('Error storing cursor position:', error);
+            return null;
+        }
     }
 
-    storeCursorPosition() {
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return null;
-
-        const range = selection.getRangeAt(0);
-        const preSelectionRange = range.cloneRange();
-        preSelectionRange.selectNodeContents(this.editor);
-        preSelectionRange.setEnd(range.startContainer, range.startOffset);
-        const start = preSelectionRange.toString().length;
-
-        return {
-            start,
-            end: start + range.toString().length,
-            scrollTop: this.editor.scrollTop,
-            scrollLeft: this.editor.scrollLeft
-        };
+    getNodePath(node) {
+        const path = [];
+        let current = node;
+        
+        try {
+            while (current && current !== this.editor) {
+                if (current.parentNode) {
+                    const siblings = Array.from(current.parentNode.childNodes);
+                    const index = siblings.indexOf(current);
+                    path.unshift({ tagName: current.nodeName, index });
+                    current = current.parentNode;
+                } else {
+                    break;
+                }
+            }
+        } catch (error) {
+            console.error('Error getting node path:', error);
+        }
+        
+        return path;
     }
 
     restoreCursorPosition(savedSelection) {
-        if (!savedSelection) return;
+        if (!savedSelection || this.isDestroyed || !this.editor) return;
 
-        const charIndex = (containerEl, index) => {
-            let currentIndex = 0;
-            const walk = document.createTreeWalker(
-                containerEl,
-                NodeFilter.SHOW_TEXT,
-                null,
-                false
-            );
-
-            let node;
-            while ((node = walk.nextNode())) {
-                const length = node.textContent.length;
-                if (currentIndex + length >= index) {
-                    return [node, index - currentIndex];
-                }
-                currentIndex += length;
+        try {
+            // Restore scroll position first
+            if (this.editor && typeof savedSelection.scrollTop === 'number') {
+                this.editor.scrollTop = savedSelection.scrollTop;
+                this.editor.scrollLeft = savedSelection.scrollLeft || 0;
             }
-            return [null, 0];
-        };
 
-        // Restore scroll position first
-        this.editor.scrollTop = savedSelection.scrollTop;
-        this.editor.scrollLeft = savedSelection.scrollLeft;
+            // Attempt to restore selection using multiple strategies
+            if (this.restoreByNodePath(savedSelection) || 
+                this.restoreByCharacterIndex(savedSelection)) {
+                return; // Successfully restored
+            }
 
-        const selection = window.getSelection();
-        const [startNode, startOffset] = charIndex(this.editor, savedSelection.start);
-        
-        if (startNode) {
-            const range = document.createRange();
-            range.setStart(startNode, startOffset);
-            
-            if (savedSelection.start !== savedSelection.end) {
-                const [endNode, endOffset] = charIndex(this.editor, savedSelection.end);
-                if (endNode) {
-                    range.setEnd(endNode, endOffset);
+            // Fallback: place cursor at end of editor
+            this.placeCursorAtEnd();
+
+        } catch (error) {
+            console.error('Error restoring cursor position:', error);
+            // Fallback on any error
+            this.placeCursorAtEnd();
+        }
+    }
+
+    restoreByNodePath(savedSelection) {
+        try {
+            if (!savedSelection.containerPath || !savedSelection.containerPath.length) {
+                return false;
+            }
+
+            let current = this.editor;
+            for (const pathStep of savedSelection.containerPath) {
+                if (!current.childNodes || current.childNodes.length <= pathStep.index) {
+                    return false;
                 }
+                current = current.childNodes[pathStep.index];
+                if (!current) return false;
+            }
+
+            // Create selection at the found node
+            const selection = window.getSelection();
+            const range = document.createRange();
+            
+            if (current.nodeType === Node.TEXT_NODE) {
+                const offset = Math.min(savedSelection.start, current.textContent.length);
+                range.setStart(current, offset);
+                range.setEnd(current, Math.min(savedSelection.end, current.textContent.length));
             } else {
-                range.collapse(true);
+                range.setStartBefore(current);
+                range.setEndBefore(current);
             }
 
             selection.removeAllRanges();
             selection.addRange(range);
-            startNode.parentElement?.scrollIntoView({ block: 'nearest' });
+            return true;
+        } catch (error) {
+            console.error('Error restoring by node path:', error);
+            return false;
         }
     }
 
-    async handleEditorChange() {
-        const saveStatus = document.getElementById('saveStatus');
-        saveStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
-        
-        // Store cursor position before save
-        const cursorPosition = this.storeCursorPosition();
-        
-        // Add change to pending batch
-        this.pendingChanges.push({
-            content: this.editor.innerHTML,
-            cursorPosition,
-            timestamp: Date.now()
-        });
+    restoreByCharacterIndex(savedSelection) {
+        try {
+            const charIndex = (containerEl, index) => {
+                let currentIndex = 0;
+                const walk = document.createTreeWalker(
+                    containerEl,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                );
 
-        // Clear existing batch timeout
-        clearTimeout(this.batchTimeout);
+                let node;
+                while ((node = walk.nextNode())) {
+                    const length = node.textContent.length;
+                    if (currentIndex + length >= index) {
+                        return [node, index - currentIndex];
+                    }
+                    currentIndex += length;
+                }
+                return [null, 0];
+            };
 
-        // Set new batch timeout
-        this.batchTimeout = setTimeout(() => this.processBatch(), this.MIN_SAVE_INTERVAL);
+            const selection = window.getSelection();
+            const [startNode, startOffset] = charIndex(this.editor, savedSelection.start);
+            
+            if (startNode) {
+                const range = document.createRange();
+                range.setStart(startNode, Math.min(startOffset, startNode.textContent.length));
+                
+                if (savedSelection.start !== savedSelection.end) {
+                    const [endNode, endOffset] = charIndex(this.editor, savedSelection.end);
+                    if (endNode) {
+                        range.setEnd(endNode, Math.min(endOffset, endNode.textContent.length));
+                    }
+                } else {
+                    range.collapse(true);
+                }
 
-        // Remove preview mode if it exists
-        this.editor.classList.remove('preview-mode');
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                // Scroll into view if needed
+                if (startNode.parentElement) {
+                    startNode.parentElement.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                }
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error restoring by character index:', error);
+            return false;
+        }
+    }
+
+    placeCursorAtEnd() {
+        try {
+            if (!this.editor) return;
+            
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(this.editor);
+            range.collapse(false); // Collapse to end
+            selection.removeAllRanges();
+            selection.addRange(range);
+        } catch (error) {
+            console.error('Error placing cursor at end:', error);
+        }
+    }async handleEditorChange() {
+        try {
+            // Prevent processing if destroyed
+            if (this.isDestroyed) return;
+            
+            const saveStatus = document.getElementById('saveStatus');
+            if (saveStatus) {
+                saveStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
+            }
+            
+            // Store cursor position before save with error handling
+            const cursorPosition = this.storeCursorPosition();
+            
+            // Add change to pending batch
+            this.pendingChanges.push({
+                content: this.editor ? this.editor.innerHTML : '',
+                cursorPosition,
+                timestamp: Date.now()
+            });
+
+            // Clear existing batch timeout
+            if (this.batchTimeout) {
+                clearTimeout(this.batchTimeout);
+                this.timeouts.delete(this.batchTimeout);
+            }
+
+            // Set new batch timeout using our managed timeout method
+            this.batchTimeout = this.setTimeout(() => this.processBatch(), this.MIN_SAVE_INTERVAL);
+
+            // Remove preview mode if it exists
+            if (this.editor) {
+                this.editor.classList.remove('preview-mode');
+            }
+        } catch (error) {
+            console.error('Error handling editor change:', error);
+            const saveStatus = document.getElementById('saveStatus');
+            if (saveStatus) {
+                saveStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+            }
+        }
     }
 
     async processBatch() {
-        if (!this.pendingChanges.length) return;
+        if (!this.pendingChanges.length || this.isDestroyed) return;
 
         try {
+            // Reset retry count on successful batch
+            this.retryAttempts = 0;
+            
             // Get latest change from batch
             const latestChange = this.pendingChanges[this.pendingChanges.length - 1];
             
@@ -730,55 +1241,124 @@ class DocumentEditor {
 
         } catch (error) {
             console.error('Batch save failed:', error);
-            // Retry saving with exponential backoff
-            setTimeout(() => this.processBatch(), this.MIN_SAVE_INTERVAL * 2);
+            
+            // Implement exponential backoff retry
+            this.retryAttempts++;
+            if (this.retryAttempts <= this.maxRetries) {
+                const backoffDelay = this.MIN_SAVE_INTERVAL * Math.pow(2, this.retryAttempts - 1);
+                console.log(`Retrying save in ${backoffDelay}ms (attempt ${this.retryAttempts}/${this.maxRetries})`);
+                
+                this.setTimeout(() => this.processBatch(), backoffDelay);
+            } else {
+                // Max retries exceeded
+                console.error('Max retry attempts exceeded');
+                const saveStatus = document.getElementById('saveStatus');
+                if (saveStatus) {
+                    saveStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Save failed - please refresh';
+                }
+                if (window.notifications) {
+                    notifications.error('Save Failed', 'Please refresh the page and try again');
+                }
+            }
         }
-    }
-
-    async saveDocument({content, cursorPosition, timestamp}) {
-        if (!this.currentUser || !this.currentDocId) return;
+    }    async saveDocument({content, cursorPosition, timestamp}) {
+        if (!this.currentUser || !this.currentDocId || this.isDestroyed) return;
 
         try {
             const now = new Date();
             const docRef = doc(db, 'documents', this.currentDocId);
 
+            // Validate content before saving
+            const validatedContent = this.validateContent(content);
+
             // Only save content and essential metadata
             const docData = {
                 content: this.isMarkdownMode ? 
-                    this.editor.querySelector('code')?.textContent || content :
-                    content,
+                    this.getMarkdownContent(validatedContent) :
+                    validatedContent,
                 lastModified: now.toISOString(),
             };
 
             // Save document with merge to prevent data loss
             await setDoc(docRef, docData, { merge: true });
 
-            // Update save status
+            // Update save status safely
             const saveStatus = document.getElementById('saveStatus');
-            saveStatus.innerHTML = '<i class="fas fa-check"></i> Saved';
+            if (saveStatus) {
+                saveStatus.innerHTML = '<i class="fas fa-check"></i> Saved';
+            }
             this.lastSaveTime = now;
 
             // Manage revisions less frequently (every 5 minutes)
             if (now - this.lastRevisionTime > 5 * 60 * 1000) {
-                await this.manageRevisions(content, now);
+                await this.manageRevisions(validatedContent, now);
                 this.lastRevisionTime = now;
             }
 
-            // Restore cursor position
+            // Restore cursor position safely
             this.restoreCursorPosition(cursorPosition);
-            this.editor.focus();
+            if (this.editor && !this.isDestroyed) {
+                this.editor.focus();
+            }
 
         } catch (error) {
-            // Retry on error with exponential backoff
-            if (error.code === 'resource-exhausted') {
-                setTimeout(() => {
-                    this.processBatch();
-                }, this.MIN_SAVE_INTERVAL * 2);
-            } else {
-                const saveStatus = document.getElementById('saveStatus');
-                saveStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error saving';
-                notifications.error('Save Failed', 'Could not save the document', ERROR_CODES.SAVE_ERROR);
+            console.error('Save document error:', error);
+            this.handleSaveError(error);
+        }
+    }
+
+    validateContent(content) {
+        // Basic content validation
+        if (typeof content !== 'string') {
+            console.warn('Invalid content type, using empty string');
+            return '<div class="page" data-page="1"><p>Start typing here...</p></div>';
+        }
+        
+        // Ensure content has at least one page
+        if (!content.includes('class="page"')) {
+            return `<div class="page" data-page="1">${content}</div>`;
+        }
+        
+        return content;
+    }
+
+    getMarkdownContent(content) {
+        try {
+            const codeElement = this.editor && this.editor.querySelector('code');
+            return codeElement ? codeElement.textContent : content;
+        } catch (error) {
+            console.error('Error getting markdown content:', error);
+            return content;
+        }
+    }
+
+    handleSaveError(error) {
+        const saveStatus = document.getElementById('saveStatus');
+        
+        if (error.code === 'resource-exhausted') {
+            if (saveStatus) {
+                saveStatus.innerHTML = '<i class="fas fa-clock"></i> Rate limited';
             }
+            // Retry with longer delay for rate limiting
+            this.setTimeout(() => {
+                this.processBatch();
+            }, this.MIN_SAVE_INTERVAL * 4);
+        } else if (error.code === 'permission-denied') {
+            if (saveStatus) {
+                saveStatus.innerHTML = '<i class="fas fa-lock"></i> Permission denied';
+            }
+            if (window.notifications) {
+                notifications.error('Save Failed', 'You do not have permission to edit this document');
+            }
+        } else {
+            if (saveStatus) {
+                saveStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error saving';
+            }
+            if (window.notifications) {
+                notifications.error('Save Failed', 'Could not save the document');
+            }
+            // Re-throw to trigger retry logic
+            throw error;
         }
     }
 
@@ -1333,85 +1913,157 @@ class DocumentEditor {
         } catch (error) {
             notifications.error('Save Failed', 'Could not update document title');
         }
-    }
+    }    setupPageManagement() {
+        // Debounce the page break checking with better management
+        const pageBreakHandler = () => {
+            if (this.pageBreakDebounce) {
+                clearTimeout(this.pageBreakDebounce);
+                this.timeouts.delete(this.pageBreakDebounce);
+            }
+            this.pageBreakDebounce = this.setTimeout(() => {
+                try {
+                    this.checkPageBreaks();
+                } catch (error) {
+                    console.error('Error in debounced page break check:', error);
+                }
+            }, 1000);
+        };
 
-    setupPageManagement() {
-        // Debounce the page break checking
-        this.editor.addEventListener('input', () => {
-            clearTimeout(this.pageBreakDebounce);
-            this.pageBreakDebounce = setTimeout(() => this.checkPageBreaks(), 1000);
-        });
+        const pasteHandler = () => {
+            if (this.pageBreakDebounce) {
+                clearTimeout(this.pageBreakDebounce);
+                this.timeouts.delete(this.pageBreakDebounce);
+            }
+            this.pageBreakDebounce = this.setTimeout(() => {
+                try {
+                    this.checkPageBreaks();
+                } catch (error) {
+                    console.error('Error in paste page break check:', error);
+                }
+            }, 1500); // Longer delay for paste to allow content to settle
+        };
 
-        this.editor.addEventListener('paste', () => {
-            clearTimeout(this.pageBreakDebounce);
-            this.pageBreakDebounce = setTimeout(() => this.checkPageBreaks(), 1000);
-        });
-    }
-
-    checkPageBreaks() {
-        if (!this.editor || !this.editor.children || !this.editor.children.length) {
+        if (this.editor) {
+            this.editor.addEventListener('input', pageBreakHandler);
+            this.editor.addEventListener('paste', pasteHandler);
+            
+            // Store event listeners for cleanup
+            this.eventListeners.set('page-input', { element: this.editor, event: 'input', handler: pageBreakHandler });
+            this.eventListeners.set('page-paste', { element: this.editor, event: 'paste', handler: pasteHandler });
+        }
+    }checkPageBreaks() {
+        // Prevent execution if destroyed or editor not ready
+        if (this.isDestroyed || !this.editor || !this.editor.children || !this.editor.children.length) {
             return;
         }
 
-        this.saveEditorState();
+        try {
+            this.saveEditorState();
 
-        // Create temporary container to hold content while processing
-        const tempContainer = document.createElement('div');
-        tempContainer.style.visibility = 'hidden';
-        document.body.appendChild(tempContainer);
-
-        // Get all content preserving order
-        const allContent = [];
-        Array.from(this.editor.children).forEach(page => {
-            if (page.classList.contains('page')) {
-                const pageContent = Array.from(page.childNodes);
-                allContent.push(...pageContent);
-            }
-        });
-
-        // Reset editor
-        const newFirstPage = document.createElement('div');
-        newFirstPage.className = 'page';
-        newFirstPage.dataset.page = '1';
-        
-        this.editor.innerHTML = '';
-        this.editor.appendChild(newFirstPage);
-        
-        let currentPage = newFirstPage;
-        let totalHeight = 0;
-        let pageNumber = 1;
-
-        // Process content in original order
-        allContent.forEach(node => {
-            // Add node to temp container to measure it
-            tempContainer.appendChild(node);
-            const nodeHeight = tempContainer.offsetHeight;
-            tempContainer.innerHTML = '';
-
-            if (totalHeight + nodeHeight > this.pageHeight - 192) { // 192px = 2 inches margins
-                // Create new page
-                currentPage = document.createElement('div');
-                currentPage.className = 'page';
-                pageNumber++;
-                currentPage.dataset.page = pageNumber;
-                this.editor.appendChild(currentPage);
-                totalHeight = 0;
+            // Create temporary container with error handling
+            const tempContainer = document.createElement('div');
+            tempContainer.style.cssText = 'visibility: hidden; position: absolute; top: -9999px;';
+            
+            // Safely append to body
+            if (document.body) {
+                document.body.appendChild(tempContainer);
+            } else {
+                console.warn('Document body not available for page break calculation');
+                return;
             }
 
-            currentPage.appendChild(node);
-            totalHeight += nodeHeight;
-        });
+            // Get all content preserving order with validation
+            const allContent = [];
+            try {
+                Array.from(this.editor.children).forEach(page => {
+                    if (page && page.classList && page.classList.contains('page')) {
+                        const pageContent = Array.from(page.childNodes);
+                        allContent.push(...pageContent);
+                    }
+                });
+            } catch (error) {
+                console.error('Error extracting page content:', error);
+                this.cleanupTempContainer(tempContainer);
+                return;
+            }
 
-        // Clean up
-        document.body.removeChild(tempContainer);
+            // Reset editor safely
+            const newFirstPage = document.createElement('div');
+            newFirstPage.className = 'page';
+            newFirstPage.dataset.page = '1';
+            
+            this.editor.innerHTML = '';
+            this.editor.appendChild(newFirstPage);
+            
+            let currentPage = newFirstPage;
+            let totalHeight = 0;
+            let pageNumber = 1;
 
-        // Update page indicator
-        document.getElementById('pageIndicator').textContent = `Page ${pageNumber} of ${pageNumber}`;
+            // Process content in original order with error handling
+            allContent.forEach(node => {
+                try {
+                    if (!node || this.isDestroyed) return;
 
-        this.restoreEditorState();
+                    // Clone node to avoid moving original
+                    const clonedNode = node.cloneNode(true);
+                    
+                    // Add node to temp container to measure it
+                    tempContainer.appendChild(clonedNode);
+                    const nodeHeight = tempContainer.offsetHeight || 0;
+                    tempContainer.innerHTML = '';
 
-        // Ensure cursor position is maintained
-        this.editor.focus();
+                    if (totalHeight + nodeHeight > this.pageHeight - 192) { // 192px = 2 inches margins
+                        // Create new page
+                        currentPage = document.createElement('div');
+                        currentPage.className = 'page';
+                        pageNumber++;
+                        currentPage.dataset.page = pageNumber;
+                        this.editor.appendChild(currentPage);
+                        totalHeight = 0;
+                    }
+
+                    currentPage.appendChild(node);
+                    totalHeight += nodeHeight;
+                } catch (nodeError) {
+                    console.error('Error processing node in page breaks:', nodeError);
+                    // Continue with next node
+                }
+            });
+
+            // Clean up temp container
+            this.cleanupTempContainer(tempContainer);
+
+            // Update page indicator safely
+            const pageIndicator = document.getElementById('pageIndicator');
+            if (pageIndicator) {
+                pageIndicator.textContent = `Page ${pageNumber} of ${pageNumber}`;
+            }
+
+            this.restoreEditorState();
+
+            // Ensure cursor position is maintained
+            if (this.editor && !this.isDestroyed) {
+                this.editor.focus();
+            }
+        } catch (error) {
+            console.error('Error in checkPageBreaks:', error);
+            // Attempt to restore editor state even on error
+            try {
+                this.restoreEditorState();
+            } catch (restoreError) {
+                console.error('Failed to restore editor state after page break error:', restoreError);
+            }
+        }
+    }
+
+    cleanupTempContainer(tempContainer) {
+        try {
+            if (tempContainer && tempContainer.parentNode) {
+                tempContainer.parentNode.removeChild(tempContainer);
+            }
+        } catch (error) {
+            console.error('Error cleaning up temp container:', error);
+        }
     }
 
     setupFontHandling() {
@@ -1715,10 +2367,232 @@ class DocumentEditor {
                 e.stopPropagation();
             }, { passive: true });
         });
+   }
+
+    // Add retry mechanism for failed initialization
+    async retryInitialization(maxRetries = 3) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`Initialization attempt ${attempt}/${maxRetries}`);
+                
+                // Wait before retry (exponential backoff)
+                if (attempt > 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 2)));
+                }
+                
+                // Reset destroyed state for retry
+                this.isDestroyed = false;
+                
+                await this.init();
+                
+                console.log('Initialization successful');
+                return;
+                
+            } catch (error) {
+                console.error(`Initialization attempt ${attempt} failed:`, error);
+                
+                if (attempt === maxRetries) {
+                    console.error('All initialization attempts failed');
+                    this.showInitializationFailure();
+                    return;
+                }
+            }
+        }
     }
+
+    showInitializationFailure() {
+        const container = document.body || document.documentElement;
+        if (container) {
+            const errorDiv = document.createElement('div');
+            errorDiv.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 30px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    text-align: center;
+                    z-index: 10000;
+                    max-width: 400px;
+                ">
+                    <h3 style="color: #e74c3c; margin-bottom: 15px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Initialization Failed
+                    </h3>
+                    <p style="margin-bottom: 20px; color: #666;">
+                        The editor could not be initialized. This may be due to:
+                    </p>
+                    <ul style="text-align: left; margin-bottom: 20px; color: #666;">
+                        <li>Network connectivity issues</li>
+                        <li>Browser compatibility problems</li>
+                        <li>Missing required resources</li>
+                    </ul>
+                    <button onclick="window.location.reload()" style="
+                        background: #3498db;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        margin-right: 10px;
+                    ">
+                        Reload Page
+                    </button>
+                    <button onclick="this.parentElement.remove()" style="
+                        background: #95a5a6;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                    ">
+                        Dismiss
+                    </button>
+                </div>
+            `;
+            container.appendChild(errorDiv);
+        }
+    }
+
+    // Recovery methods for common failures
+    recoverFromSaveFailure() {
+        try {
+            // Reset retry attempts
+            this.retryAttempts = 0;
+            
+            // Clear any corrupted pending changes
+            if (this.pendingChanges.length > 10) {
+                console.warn('Too many pending changes, clearing some...');
+                this.pendingChanges = this.pendingChanges.slice(-5); // Keep only last 5
+            }
+            
+            // Restart the save process
+            if (this.pendingChanges.length > 0) {
+                this.setTimeout(() => this.processBatch(), this.MIN_SAVE_INTERVAL);
+            }
+            
+        } catch (error) {
+            console.error('Error in save failure recovery:', error);
+        }
+    }
+
+    recoverFromEditorStateFailure() {
+        try {
+            // Clear corrupted state
+            this.selectionState = null;
+            this.lastSelection = null;
+            this.lastRange = null;
+            
+            // Ensure editor is focused and editable
+            if (this.editor && !this.isDestroyed) {
+                this.editor.focus();
+                
+                // Place cursor at a safe position
+                this.placeCursorAtEnd();
+            }
+            
+        } catch (error) {
+            console.error('Error in editor state recovery:', error);
+        }
+    }
+
+    // Health check method
+    performHealthCheck() {
+        const issues = [];
+        
+        try {
+            // Check if editor exists and is accessible
+            if (!this.editor) {
+                issues.push('Editor element not found');
+            } else if (!document.contains(this.editor)) {
+                issues.push('Editor element not in DOM');
+            }
+            
+            // Check if essential methods are available
+            if (typeof this.saveDocument !== 'function') {
+                issues.push('Save functionality compromised');
+            }
+            
+            // Check if Firebase is available
+            if (typeof db === 'undefined') {
+                issues.push('Database connection unavailable');
+            }
+            
+            // Check for memory leaks
+            if (this.timeouts.size > 50) {
+                issues.push('Too many active timeouts - possible memory leak');
+            }
+            
+            if (this.eventListeners.size > 100) {
+                issues.push('Too many event listeners - possible memory leak');
+            }
+            
+            // Log health status
+            if (issues.length === 0) {
+                console.log('DocumentEditor health check: OK');
+            } else {
+                console.warn('DocumentEditor health issues:', issues);
+                
+                // Attempt auto-recovery for some issues
+                if (issues.includes('Too many active timeouts - possible memory leak')) {
+                    this.timeouts.clear();
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error during health check:', error);
+            issues.push('Health check failed');
+        }
+        
+        return issues;
+    }
+
+    // ...existing code...
 }
 
 // Initialize the editor when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.editor = new DocumentEditor();
+    try {
+        window.editor = new DocumentEditor();
+        
+        // Perform periodic health checks (every 5 minutes)
+        setInterval(() => {
+            if (window.editor && !window.editor.isDestroyed) {
+                window.editor.performHealthCheck();
+            }
+        }, 5 * 60 * 1000);
+        
+        // Add global error handler for unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            if (window.notifications) {
+                notifications.error('Unexpected Error', 'An unexpected error occurred. Please save your work.');
+            }
+        });
+        
+        // Add global error handler
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            // Don't show notification for every error to avoid spam
+        });
+        
+    } catch (error) {
+        console.error('Failed to initialize DocumentEditor:', error);
+        
+        // Try to create a fallback editor after a delay
+        setTimeout(() => {
+            if (!window.editor) {
+                console.log('Attempting fallback initialization...');
+                try {
+                    window.editor = new DocumentEditor();
+                    window.editor.retryInitialization();
+                } catch (fallbackError) {
+                    console.error('Fallback initialization also failed:', fallbackError);
+                }
+            }
+        }, 2000);
+    }
 });

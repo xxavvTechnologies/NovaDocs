@@ -1,5 +1,21 @@
 {
+  "name": "novadocs",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A modern document editor with AI capabilities",
+  "main": "app.js",
+  "scripts": {
+    "start": "http-server -p 8080",
+    "test": "echo \"No tests configured yet\" && exit 0",
+    "dev": "http-server -p 8080 -o"
+  },
   "dependencies": {
     "nlpcloud": "^2.0.8"
-  }
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": ["document", "editor", "ai", "firebase"],
+  "author": "",
+  "license": "MIT"
 }

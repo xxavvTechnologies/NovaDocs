@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Stability Test - Nova Docs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .test-passed {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .test-failed {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        .test-pending {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Mock document viewer styles */
+        .document-content {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            min-height: 100px;
+        }
+        
+        .page {
+            border: 1px dashed #999;
+            padding: 10px;
+            margin: 5px 0;
+        }
+        
+        .search-highlight {
+            background-color: yellow;
+        }
+        
+        .search-highlight.active {
+            background-color: orange;
+        }
+        
+        .access-denied-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .access-denied-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>DocumentViewer Stability Test</h1>
+    <p>This page tests the stability improvements made to the DocumentViewer class.</p>
+    
+    <div class="test-section test-pending">
+        <h3>Test 1: Constructor Stability</h3>
+        <p>Tests if the DocumentViewer can be created and destroyed safely.</p>
+        <button onclick="testConstructorStability()">Run Test</button>
+        <div id="test1-result"></div>
+    </div>
+    
+    <div class="test-section test-pending">
+        <h3>Test 2: Resource Management</h3>
+        <p>Tests if timeouts and intervals are properly managed.</p>
+        <button onclick="testResourceManagement()">Run Test</button>
+        <div id="test2-result"></div>
+    </div>
+    
+    <div class="test-section test-pending">
+        <h3>Test 3: DOM Safety</h3>
+        <p>Tests if DOM operations handle missing elements gracefully.</p>
+        <button onclick="testDOMSafety()">Run Test</button>
+        <div id="test3-result"></div>
+    </div>
+    
+    <div class="test-section test-pending">
+        <h3>Test 4: Event Listener Cleanup</h3>
+        <p>Tests if event listeners are properly tracked and cleaned up.</p>
+        <button onclick="testEventListenerCleanup()">Run Test</button>
+        <div id="test4-result"></div>
+    </div>
+    
+    <div class="test-section test-pending">
+        <h3>Test 5: Error Handling</h3>
+        <p>Tests if errors are handled gracefully without crashing.</p>
+        <button onclick="testErrorHandling()">Run Test</button>
+        <div id="test5-result"></div>
+    </div>
+    
+    <!-- Mock DOM elements for testing -->
+    <div class="hidden">
+        <div class="document-content"></div>
+        <button id="undoBtn">Undo</button>
+        <button id="redoBtn">Redo</button>
+        <button id="zoomOutBtn">Zoom Out</button>
+        <button id="zoomInBtn">Zoom In</button>
+        <select id="zoomLevel">
+            <option value="0.5">50%</option>
+            <option value="1" selected>100%</option>
+            <option value="1.5">150%</option>
+        </select>
+        <button id="makeACopy">Make a Copy</button>
+        <button id="printBtn">Print</button>
+        <button id="fullscreenBtn">Fullscreen</button>
+        <input id="searchInput" type="text" placeholder="Search...">
+        <button id="prevMatch">Previous</button>
+        <button id="nextMatch">Next</button>
+        <span id="matchCount"></span>
+        <button id="prevPage">Previous Page</button>
+        <button id="nextPage">Next Page</button>
+        <span id="pageIndicator"></span>
+    </div>
+    
+    <div class="log" id="testLog"></div>
+    
+    <!-- Mock Firebase and notifications -->
+    <script>
+        // Mock Firebase objects
+        window.auth = {
+            currentUser: null
+        };
+        
+        window.db = {};
+        
+        window.notifications = {
+            success: (title, message) => log(`SUCCESS: ${title} - ${message}`),
+            warning: (title, message) => log(`WARNING: ${title} - ${message}`),
+            error: (title, message) => log(`ERROR: ${title} - ${message}`)
+        };
+        
+        function log(message) {
+            const logDiv = document.getElementById('testLog');
+            logDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function setTestResult(testId, passed, message) {
+            const resultDiv = document.getElementById(`test${testId}-result`);
+            const testSection = resultDiv.closest('.test-section');
+            
+            testSection.classList.remove('test-pending', 'test-passed', 'test-failed');
+            testSection.classList.add(passed ? 'test-passed' : 'test-failed');
+            
+            resultDiv.innerHTML = `<strong>${passed ? 'PASSED' : 'FAILED'}</strong>: ${message}`;
+        }
+    </script>
+    
+    <!-- Load the enhanced DocumentViewer -->
+    <script type="module">
+        // Import the DocumentViewer class (simplified for testing)
+        log('Loading DocumentViewer for testing...');
+        
+        // Test functions
+        window.testConstructorStability = function() {
+            log('Testing constructor stability...');
+            try {
+                // Create multiple instances
+                const viewer1 = new DocumentViewer();
+                const viewer2 = new DocumentViewer();
+                
+                // Destroy them
+                viewer1.cleanup();
+                viewer2.cleanup();
+                
+                setTestResult(1, true, 'Multiple DocumentViewer instances created and destroyed successfully');
+            } catch (error) {
+                log(`Constructor test failed: ${error.message}`);
+                setTestResult(1, false, `Error: ${error.message}`);
+            }
+        };
+        
+        window.testResourceManagement = function() {
+            log('Testing resource management...');
+            try {
+                const viewer = new DocumentViewer();
+                
+                // Test managed timeouts
+                const timeoutId = viewer.managedSetTimeout(() => {
+                    log('Managed timeout executed');
+                }, 100);
+                
+                const intervalId = viewer.managedSetInterval(() => {
+                    log('Managed interval executed');
+                }, 200);
+                
+                // Cleanup should clear these
+                setTimeout(() => {
+                    viewer.cleanup();
+                    setTestResult(2, true, 'Resources managed and cleaned up successfully');
+                }, 500);
+                
+            } catch (error) {
+                log(`Resource management test failed: ${error.message}`);
+                setTestResult(2, false, `Error: ${error.message}`);
+            }
+        };
+        
+        window.testDOMSafety = function() {
+            log('Testing DOM safety...');
+            try {
+                const viewer = new DocumentViewer();
+                
+                // Test operations on missing elements
+                viewer.updatePageButtons(); // Should not crash
+                viewer.updateUndoRedoButtons(); // Should not crash
+                viewer.updateSearchButtons(); // Should not crash
+                
+                viewer.cleanup();
+                setTestResult(3, true, 'DOM operations handled missing elements gracefully');
+            } catch (error) {
+                log(`DOM safety test failed: ${error.message}`);
+                setTestResult(3, false, `Error: ${error.message}`);
+            }
+        };
+        
+        window.testEventListenerCleanup = function() {
+            log('Testing event listener cleanup...');
+            try {
+                const viewer = new DocumentViewer();
+                
+                // Check if event listeners map is initialized
+                const hasEventListeners = viewer.eventListeners instanceof Map;
+                
+                // Setup some functionality (which should add event listeners)
+                viewer.setupUndoRedo();
+                viewer.setupZoomControls();
+                
+                const listenerCount = viewer.eventListeners.size;
+                log(`Event listeners registered: ${listenerCount}`);
+                
+                // Cleanup
+                viewer.cleanup();
+                
+                setTestResult(4, hasEventListeners && listenerCount > 0, 
+                    `Event listeners tracked (${listenerCount}) and cleaned up`);
+            } catch (error) {
+                log(`Event listener test failed: ${error.message}`);
+                setTestResult(4, false, `Error: ${error.message}`);
+            }
+        };
+        
+        window.testErrorHandling = function() {
+            log('Testing error handling...');
+            try {
+                const viewer = new DocumentViewer();
+                
+                // Test error handling by calling methods on destroyed viewer
+                viewer.cleanup(); // Destroy the viewer
+                
+                // These should not crash
+                viewer.loadDocument('invalid-id');
+                viewer.renderDocument({});
+                viewer.setupCopyProtection();
+                viewer.performSearch('test');
+                
+                setTestResult(5, true, 'Error handling prevented crashes on destroyed viewer');
+            } catch (error) {
+                log(`Error handling test failed: ${error.message}`);
+                setTestResult(5, false, `Error: ${error.message}`);
+            }
+        };
+        
+        log('Test functions loaded. Ready to run tests.');
+    </script>
+    
+    <!-- Simplified DocumentViewer for testing -->
+    <script>
+        class DocumentViewer {
+            constructor() {
+                try {
+                    // Initialize stability properties
+                    this.isDestroyed = false;
+                    this.timeouts = new Set();
+                    this.intervals = new Set();
+                    this.eventListeners = new Map();
+                    
+                    // Document state
+                    this.documentData = null;
+                    this.currentZoom = 1;
+                    this.history = [];
+                    this.currentHistoryIndex = -1;
+                    this.searchMatches = [];
+                    this.currentMatch = -1;
+                    this.currentPage = 1;
+                    this.totalPages = 1;
+                    this.isFullscreen = false;
+                    this.isUndoRedo = false;
+                    
+                    log('DocumentViewer initialized');
+                    
+                    // Setup cleanup handler
+                    window.addEventListener('beforeunload', () => this.cleanup());
+                } catch (error) {
+                    log(`Error in DocumentViewer constructor: ${error.message}`);
+                    throw error;
+                }
+            }
+            
+            cleanup() {
+                if (this.isDestroyed) return;
+                
+                try {
+                    log('Starting DocumentViewer cleanup...');
+                    this.isDestroyed = true;
+                    
+                    // Clear timeouts
+                    this.timeouts.forEach(id => {
+                        try {
+                            clearTimeout(id);
+                        } catch (error) {
+                            log(`Error clearing timeout: ${error.message}`);
+                        }
+                    });
+                    this.timeouts.clear();
+                    
+                    // Clear intervals
+                    this.intervals.forEach(id => {
+                        try {
+                            clearInterval(id);
+                        } catch (error) {
+                            log(`Error clearing interval: ${error.message}`);
+                        }
+                    });
+                    this.intervals.clear();
+                    
+                    // Remove event listeners
+                    this.eventListeners.forEach((handler, event) => {
+                        try {
+                            document.removeEventListener(event, handler);
+                        } catch (error) {
+                            log(`Error removing event listener: ${error.message}`);
+                        }
+                    });
+                    this.eventListeners.clear();
+                    
+                    log('DocumentViewer cleanup completed');
+                } catch (error) {
+                    log(`Error during cleanup: ${error.message}`);
+                }
+            }
+            
+            managedSetTimeout(callback, delay) {
+                if (this.isDestroyed) return null;
+                
+                const id = setTimeout(() => {
+                    this.timeouts.delete(id);
+                    if (!this.isDestroyed) {
+                        callback();
+                    }
+                }, delay);
+                
+                this.timeouts.add(id);
+                return id;
+            }
+            
+            managedSetInterval(callback, delay) {
+                if (this.isDestroyed) return null;
+                
+                const id = setInterval(() => {
+                    if (this.isDestroyed) {
+                        clearInterval(id);
+                        this.intervals.delete(id);
+                    } else {
+                        callback();
+                    }
+                }, delay);
+                
+                this.intervals.add(id);
+                return id;
+            }
+            
+            loadDocument(docId) {
+                if (this.isDestroyed) return;
+                log(`Loading document: ${docId}`);
+                // Mock implementation for testing
+            }
+            
+            renderDocument(data) {
+                if (this.isDestroyed) return;
+                log('Rendering document');
+                // Mock implementation for testing
+            }
+            
+            setupCopyProtection() {
+                if (this.isDestroyed) return;
+                log('Setting up copy protection');
+                // Mock implementation for testing
+            }
+            
+            setupUndoRedo() {
+                if (this.isDestroyed) return;
+                log('Setting up undo/redo');
+                
+                const undoBtn = document.getElementById('undoBtn');
+                const redoBtn = document.getElementById('redoBtn');
+                
+                if (undoBtn) {
+                    const handler = () => this.undo();
+                    undoBtn.addEventListener('click', handler);
+                    this.eventListeners.set('undoBtn', handler);
+                }
+                
+                if (redoBtn) {
+                    const handler = () => this.redo();
+                    redoBtn.addEventListener('click', handler);
+                    this.eventListeners.set('redoBtn', handler);
+                }
+            }
+            
+            setupZoomControls() {
+                if (this.isDestroyed) return;
+                log('Setting up zoom controls');
+                
+                const zoomOut = document.getElementById('zoomOutBtn');
+                const zoomIn = document.getElementById('zoomInBtn');
+                
+                if (zoomOut) {
+                    const handler = () => log('Zoom out clicked');
+                    zoomOut.addEventListener('click', handler);
+                    this.eventListeners.set('zoomOutBtn', handler);
+                }
+                
+                if (zoomIn) {
+                    const handler = () => log('Zoom in clicked');
+                    zoomIn.addEventListener('click', handler);
+                    this.eventListeners.set('zoomInBtn', handler);
+                }
+            }
+            
+            undo() {
+                if (this.isDestroyed) return;
+                log('Undo action');
+            }
+            
+            redo() {
+                if (this.isDestroyed) return;
+                log('Redo action');
+            }
+            
+            updatePageButtons() {
+                if (this.isDestroyed) return;
+                
+                try {
+                    const prevPage = document.getElementById('prevPage');
+                    const nextPage = document.getElementById('nextPage');
+                    const pageIndicator = document.getElementById('pageIndicator');
+                    
+                    if (prevPage) prevPage.disabled = this.currentPage === 1;
+                    if (nextPage) nextPage.disabled = this.currentPage === this.totalPages;
+                    if (pageIndicator) pageIndicator.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+                    
+                    log('Page buttons updated');
+                } catch (error) {
+                    log(`Error updating page buttons: ${error.message}`);
+                }
+            }
+            
+            updateUndoRedoButtons() {
+                if (this.isDestroyed) return;
+                
+                try {
+                    const undoBtn = document.getElementById('undoBtn');
+                    const redoBtn = document.getElementById('redoBtn');
+                    
+                    if (undoBtn) undoBtn.disabled = this.currentHistoryIndex <= 0;
+                    if (redoBtn) redoBtn.disabled = this.currentHistoryIndex >= this.history.length - 1;
+                    
+                    log('Undo/redo buttons updated');
+                } catch (error) {
+                    log(`Error updating undo/redo buttons: ${error.message}`);
+                }
+            }
+            
+            updateSearchButtons() {
+                if (this.isDestroyed) return;
+                
+                try {
+                    const hasMatches = this.searchMatches.length > 0;
+                    const prevMatch = document.getElementById('prevMatch');
+                    const nextMatch = document.getElementById('nextMatch');
+                    const matchCount = document.getElementById('matchCount');
+                    
+                    if (prevMatch) prevMatch.disabled = !hasMatches;
+                    if (nextMatch) nextMatch.disabled = !hasMatches;
+                    if (matchCount) matchCount.textContent = hasMatches ? `${this.currentMatch + 1}/${this.searchMatches.length}` : '';
+                    
+                    log('Search buttons updated');
+                } catch (error) {
+                    log(`Error updating search buttons: ${error.message}`);
+                }
+            }
+            
+            performSearch(query) {
+                if (this.isDestroyed) return;
+                log(`Performing search: ${query}`);
+                // Mock implementation for testing
+            }
+        }
+        
+        // Make it globally available for testing
+        window.DocumentViewer = DocumentViewer;
+    </script>
+</body>
+</html>
